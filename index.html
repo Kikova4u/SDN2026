@@ -1,0 +1,5381 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Presentation</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #141414;
+      --muted: #5f6368;
+      --line: #ececec;
+      --dot: rgba(20, 20, 20, 0.12);
+      --nav-border: #d9d9d9;
+      --nav-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+      --menu-bg: rgba(255, 255, 255, 0.96);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    body {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .device-blocker {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(6, 18, 32, 0.96);
+    }
+
+    .device-blocker.is-visible {
+      display: flex;
+    }
+
+    .device-blocker-card {
+      width: min(560px, 92vw);
+      background: #ffffff;
+      border: 1px solid #cfe1ee;
+      border-radius: 16px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.3);
+      padding: 22px 20px;
+      text-align: center;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .device-blocker-card h2 {
+      margin: 0 0 10px;
+      color: #0b5f85;
+      font-size: clamp(1.35rem, 4.8vw, 1.9rem);
+      letter-spacing: -0.01em;
+    }
+
+    .device-blocker-card p {
+      margin: 0;
+      color: #2d4f67;
+      font-size: 1.02rem;
+      line-height: 1.5;
+    }
+
+    .device-blocker-card p + p {
+      margin-top: 8px;
+    }
+
+    body.device-blocked .bg-canvas,
+    body.device-blocked .top-nav,
+    body.device-blocked .deck,
+    body.device-blocked .slide-nav-btn {
+      visibility: hidden;
+    }
+
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      padding-top: 116px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .top-nav {
+      position: fixed;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(920px, calc(100vw - 44px));
+      height: 76px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #ffffff;
+      border: 1px solid var(--nav-border);
+      border-radius: 26px;
+      box-shadow: var(--nav-shadow);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .top-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border-top: 0;
+      border-left: 0;
+      border-bottom: 0;
+      border-right: 1px solid var(--line);
+      color: var(--text);
+      font-size: clamp(1rem, 1.45vw, 1.23rem);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    .top-link:last-child {
+      border-right: none;
+    }
+
+    .top-link::after {
+      content: "";
+      position: absolute;
+      left: 20%;
+      right: 20%;
+      bottom: 20px;
+      height: 2px;
+      background: #131313;
+      transform: scaleX(0);
+      transform-origin: center;
+      transition: transform 200ms ease;
+    }
+
+    .top-link:hover,
+    .top-link:focus-visible {
+      background: #f8f8f8;
+      color: #000000;
+      outline: none;
+    }
+
+    .top-link.is-active {
+      background: #f6f6f6;
+      color: #000000;
+    }
+
+    .top-link:hover::after,
+    .top-link:focus-visible::after,
+    .top-link.is-active::after {
+      transform: scaleX(1);
+    }
+
+    .profile-content {
+      width: min(1380px, calc(100vw - 70px));
+      min-height: calc(100vh - 170px);
+      padding: clamp(1rem, 4vw, 3rem);
+      display: grid;
+      align-content: center;
+      justify-items: start;
+      gap: 0.9rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(16px);
+      transition:
+        opacity 320ms var(--ease),
+        transform 320ms var(--ease),
+        visibility 0ms linear 320ms;
+    }
+
+    .deck.has-content .profile-content {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition:
+        opacity 320ms var(--ease),
+        transform 320ms var(--ease),
+        visibility 0ms linear 0ms;
+    }
+
+    .profile-tag {
+      margin: 0;
+      font-size: 0.76rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: clamp(1.5rem, 2.1vw, 2.2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+    }
+
+    .profile-text {
+      margin: 0;
+      color: #404040;
+      line-height: 1.5;
+      font-size: clamp(1rem, 1.5vw, 1.35rem);
+      max-width: 72ch;
+      white-space: pre-line;
+    }
+
+    .profile-tag:empty,
+    .profile-text:empty {
+      display: none;
+    }
+
+    .slide-rich[hidden] {
+      display: none !important;
+    }
+
+    .deck.toc-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.history-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.intro-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.arch-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.decouple-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.recap-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.handoff-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: center;
+    }
+
+    .deck.aya-abstraction-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.aya-coex-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.aya-api-scene-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.aya-controllers-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.aya-actors-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.abd-migration-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.abd-automation-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .deck.abd-final-slide .profile-content {
+      justify-items: center;
+      align-content: center;
+      text-align: left;
+    }
+
+    .tocx-block {
+      width: min(760px, 86vw);
+      margin: 0 auto;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .tocx-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #a0aec0;
+      margin-bottom: 10px;
+    }
+
+    .tocx-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ebf5fb;
+      border: 1px solid #bee3f8;
+      color: #065a82;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+    }
+
+    .tocx-count::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00b4d8;
+    }
+
+    .tocx-title {
+      font-size: clamp(2rem, 4.2vw, 3.1rem);
+      font-weight: 700;
+      color: #0a1628;
+      line-height: 1.08;
+      margin-bottom: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    .tocx-list {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 20px;
+    }
+
+    .tocx-list::before {
+      content: "";
+      position: absolute;
+      left: 15px;
+      top: 16px;
+      bottom: 16px;
+      width: 2px;
+      background: #e8edf3;
+    }
+
+    .tocx-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0 10px 24px;
+      position: relative;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateX(-12px);
+      animation: tocx-slide-in 0.42s forwards;
+    }
+
+    .tocx-item:nth-child(1) { animation-delay: 0.05s; }
+    .tocx-item:nth-child(2) { animation-delay: 0.12s; }
+    .tocx-item:nth-child(3) { animation-delay: 0.19s; }
+    .tocx-item:nth-child(4) { animation-delay: 0.26s; }
+    .tocx-item:nth-child(5) { animation-delay: 0.33s; }
+
+    @keyframes tocx-slide-in {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .tocx-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e8edf3;
+      color: #7a8899;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.25s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tocx-item.active .tocx-badge {
+      background: #00b4d8;
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.15);
+    }
+
+    .tocx-item.active .tocx-badge::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 180, 216, 0.4);
+      animation: tocx-pulse 2s infinite;
+    }
+
+    @keyframes tocx-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.25); opacity: 0; }
+    }
+
+    .tocx-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tocx-chapter-title {
+      font-size: clamp(1.05rem, 1.7vw, 1.55rem);
+      font-weight: 500;
+      color: #4a5568;
+      transition: color 0.2s;
+    }
+
+    .tocx-item.active .tocx-chapter-title {
+      font-weight: 700;
+      color: #0a1628;
+    }
+
+    .tocx-bar {
+      width: 100%;
+      height: 3px;
+      background: #edf2f7;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .tocx-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: #00b4d8;
+      transition: width 0.4s ease;
+    }
+
+    .tocx-meta {
+      font-size: 11px;
+      color: #b0bec5;
+      font-weight: 500;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .tocx-item:hover:not(.active) .tocx-badge {
+      background: #065a82;
+      color: #fff;
+    }
+
+    .tocx-item:hover:not(.active) .tocx-chapter-title {
+      color: #065a82;
+    }
+
+    .historyx-block {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .historyx-header {
+      margin-bottom: 16px;
+    }
+
+    .historyx-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #9aa8ba;
+      margin-bottom: 6px;
+    }
+
+    .historyx-title {
+      font-size: clamp(1.5rem, 3.3vw, 2.45rem);
+      font-weight: 800;
+      color: #0a1628;
+      letter-spacing: -0.02em;
+      line-height: 1.16;
+    }
+
+    .historyx-title span {
+      color: #065a82;
+    }
+
+    .historyx-track {
+      display: flex;
+      align-items: flex-start;
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .historyx-track::before {
+      content: "";
+      position: absolute;
+      top: 17px;
+      left: 0;
+      right: 0;
+      height: 1.5px;
+      background: #dbe6f1;
+      z-index: 0;
+    }
+
+    .historyx-milestone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+
+    .historyx-year {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #f5f7fa;
+      border: 1.5px solid #dde6f0;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+      transition: all 0.22s;
+      white-space: nowrap;
+      z-index: 2;
+      position: relative;
+    }
+
+    .historyx-milestone.active .historyx-year {
+      background: #065a82;
+      border-color: #065a82;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(6, 90, 130, 0.28);
+    }
+
+    .historyx-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #d1dce8;
+      margin-top: 7px;
+      transition: all 0.22s;
+      position: relative;
+    }
+
+    .historyx-milestone.active .historyx-dot {
+      background: #065a82;
+      box-shadow: 0 0 0 4px rgba(6, 90, 130, 0.12);
+    }
+
+    .historyx-milestone.active .historyx-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(6, 90, 130, 0.2);
+      animation: historyx-ripple 2s infinite;
+    }
+
+    @keyframes historyx-ripple {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    .historyx-card-area {
+      margin-top: 12px;
+      border: 1px solid #e1e9f2;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 18px;
+    }
+
+    .historyx-card {
+      display: none;
+      gap: 18px;
+      align-items: stretch;
+      animation: historyx-fade 0.28s ease forwards;
+    }
+
+    .historyx-card.visible {
+      display: flex;
+    }
+
+    @keyframes historyx-fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .historyx-main {
+      flex: 1;
+    }
+
+    .historyx-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #065a82;
+      background: rgba(6, 90, 130, 0.07);
+      border: 1px solid rgba(6, 90, 130, 0.14);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .historyx-card-title {
+      font-size: clamp(1.05rem, 1.9vw, 1.45rem);
+      font-weight: 800;
+      color: #0a1628;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .historyx-card-desc {
+      font-size: clamp(0.9rem, 1.2vw, 1.02rem);
+      color: #4f6276;
+      line-height: 1.7;
+      max-width: 70ch;
+    }
+
+    .historyx-facts {
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      border-left: 1px solid #e7edf4;
+      padding-left: 14px;
+    }
+
+    .historyx-fact {
+      background: #f8fafc;
+      border: 1px solid #e4ecf5;
+      border-radius: 11px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .historyx-fact-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: rgba(6, 90, 130, 0.09);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .historyx-fact-text strong {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .historyx-fact-text span {
+      font-size: 11px;
+      color: #8ba0b7;
+      line-height: 1.4;
+    }
+
+    .historyx-progress {
+      margin-top: 14px;
+      height: 2.5px;
+      background: #e8edf3;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .historyx-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #065a82, #00b4d8);
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .historyx-card-2007 {
+      display: none;
+      height: 100%;
+      gap: 0;
+    }
+
+    .historyx-card-2007.visible {
+      display: flex;
+      animation: historyx-fade 0.3s forwards;
+    }
+
+    .historyx-col-text {
+      width: 360px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-right: 24px;
+    }
+
+    .historyx-col-photo {
+      width: 210px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      position: relative;
+      padding-bottom: 12px;
+    }
+
+    .historyx-photo-frame {
+      width: 190px;
+      height: 240px;
+      border-radius: 16px 16px 0 0;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #f2f6fb 0%, #e9eef5 100%);
+      box-shadow: 0 -2px 0 0 #e2eaf3, inset 0 -30px 40px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      color: #0f2740;
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding-bottom: 18px;
+    }
+
+    .historyx-photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 10%;
+      display: block;
+      mix-blend-mode: multiply;
+      filter: contrast(1.06) brightness(1.02);
+    }
+
+    .historyx-photo-frame::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background: linear-gradient(90deg, #065a82, #00b4d8);
+      border-radius: 0 0 4px 4px;
+      z-index: 2;
+    }
+
+    .historyx-photo-badge {
+      margin-top: 10px;
+      background: #065a82;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 6px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(6, 90, 130, 0.28);
+      text-align: center;
+    }
+
+    .historyx-photo-badge span {
+      display: block;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      opacity: 0.82;
+      margin-top: 1px;
+    }
+
+    .historyx-col-divider {
+      width: 1px;
+      background: #e8edf3;
+      align-self: stretch;
+      margin: 12px 0;
+      flex-shrink: 0;
+    }
+
+    .historyx-card-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-right: 28px;
+    }
+
+    .historyx-card-facts-std {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      justify-content: center;
+    }
+
+    .introx-shell {
+      width: min(1220px, 94vw);
+      border: 1px solid #d9e5ef;
+      background: #dfe9f1;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 14px 34px rgba(14, 45, 74, 0.09);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .introx-header {
+      background: #065a82;
+      color: #ffffff;
+      padding: 22px 34px;
+      font-size: clamp(1.65rem, 3.2vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+
+    .introx-body {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      padding: 22px;
+      min-height: 470px;
+    }
+
+    .introx-left {
+      background: #ffffff;
+      border: 1px solid #d6e4f1;
+      border-top: 7px solid #10b4d8;
+      box-shadow: 0 8px 24px rgba(8, 56, 92, 0.1);
+      padding: 26px 30px;
+    }
+
+    .introx-left h3 {
+      margin: 0 0 16px;
+      color: #0d6b93;
+      font-size: clamp(1.35rem, 2vw, 2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .introx-left p {
+      margin: 0;
+      color: #273748;
+      font-size: clamp(1.05rem, 1.35vw, 1.6rem);
+      line-height: 1.45;
+      max-width: 34ch;
+      white-space: pre-line;
+    }
+
+    .introx-right h3 {
+      margin: 10px 0 16px;
+      color: #115f86;
+      font-size: clamp(1.35rem, 2vw, 2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .introx-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .introx-item {
+      background: #ffffff;
+      border: 1px solid #d6e4f1;
+      border-left: 10px solid #10b4d8;
+      box-shadow: 0 6px 18px rgba(8, 56, 92, 0.08);
+      padding: 14px 16px;
+    }
+
+    .introx-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #0d6b93;
+      font-size: clamp(1.03rem, 1.4vw, 1.35rem);
+      letter-spacing: -0.01em;
+    }
+
+    .introx-item span {
+      display: block;
+      color: #2d3f52;
+      font-size: clamp(0.98rem, 1.15vw, 1.2rem);
+      line-height: 1.35;
+    }
+
+    .archx-shell {
+      width: min(1240px, 94vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e6eef6 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .archx-header {
+      background: #075a82;
+      color: #fff;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .archx-header h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.6vw, 2.15rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .archx-context {
+      font-size: 0.8rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: #cce7f8;
+      white-space: nowrap;
+    }
+
+    .archx-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+      padding: 20px;
+      min-height: 500px;
+    }
+
+    .archx-switch-card,
+    .archx-side-card {
+      background: #fff;
+      border: 1px solid #d6e4f1;
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(11, 61, 96, 0.08);
+    }
+
+    .archx-switch-card {
+      padding: 18px;
+    }
+
+    .archx-switch-wrap {
+      border: 1px dashed #c8dceb;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f8fbfe 0%, #f1f7fc 100%);
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      margin-bottom: 16px;
+      min-height: 200px;
+    }
+
+    .archx-switch-wrap svg {
+      width: min(520px, 95%);
+      height: auto;
+      display: block;
+    }
+
+    .archx-layer-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .archx-layer-item {
+      background: #f7fbff;
+      border: 1px solid #d9e7f3;
+      border-left: 8px solid #0fb2d6;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .archx-layer-item strong {
+      display: block;
+      color: #0b5f85;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .archx-layer-item span {
+      color: #344e63;
+      font-size: 0.95rem;
+    }
+
+    .archx-side-card {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .archx-side-card h3 {
+      margin: 0;
+      color: #0c628b;
+      font-size: clamp(1.1rem, 1.75vw, 1.45rem);
+      letter-spacing: -0.01em;
+    }
+
+    .archx-side-card p {
+      margin: 0;
+      color: #3a556c;
+      font-size: 1rem;
+      line-height: 1.45;
+      max-width: 42ch;
+      white-space: pre-line;
+    }
+
+    .archx-cli {
+      background: #0d1520;
+      border: 1px solid #1f3245;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .archx-cli-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #101c2b;
+      border-bottom: 1px solid #1a2d42;
+      color: #bfd4e8;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .archx-cli-dots {
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .archx-cli-dots i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      background: #4f647a;
+    }
+
+    .archx-cli-dots i:nth-child(1) { background: #ff5f56; }
+    .archx-cli-dots i:nth-child(2) { background: #ffbd2e; }
+    .archx-cli-dots i:nth-child(3) { background: #27c93f; }
+
+    .archx-cli-body {
+      padding: 12px;
+      min-height: 150px;
+      max-height: 180px;
+      overflow: auto;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      color: #cde4fb;
+      white-space: pre-wrap;
+    }
+
+    .archx-cli-line {
+      color: #8db9e4;
+      margin-bottom: 4px;
+    }
+
+    .archx-cli-output {
+      color: #d8ebff;
+      margin: 0 0 10px 0;
+    }
+
+    .archx-cli-input {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid #1a2d42;
+      background: #0d1520;
+      padding: 10px;
+      align-items: center;
+      font-family: "Consolas", "Courier New", monospace;
+    }
+
+    .archx-cli-prompt {
+      color: #64c7ff;
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    .archx-cli-field {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid #26445f;
+      border-radius: 8px;
+      background: #0b121b;
+      color: #e2f2ff;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 0.84rem;
+      outline: none;
+    }
+
+    .archx-cli-field:focus {
+      border-color: #35b7ff;
+      box-shadow: 0 0 0 2px rgba(53, 183, 255, 0.15);
+    }
+
+    .archx-cli-run {
+      border: 1px solid #2f5f80;
+      background: #13324a;
+      color: #d8ecff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .archx-app-flow {
+      background: #f7fbff;
+      border: 1px solid #d9e7f3;
+      border-radius: 12px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .archx-app-nodes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .archx-app-node {
+      background: #ffffff;
+      border: 1px solid #d7e6f3;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.86rem;
+      color: #37536a;
+      font-weight: 600;
+    }
+
+    .archx-app-arrows {
+      font-size: 1.25rem;
+      color: #0e82b2;
+      text-align: center;
+    }
+
+    .archx-app-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .archx-app-btn {
+      border: 1px solid #b8d9ee;
+      background: #edf7fd;
+      color: #0c6188;
+      border-radius: 999px;
+      padding: 7px 11px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .archx-app-out {
+      margin: 0;
+      background: #0f1c2b;
+      border: 1px solid #1e3448;
+      border-radius: 10px;
+      color: #cfe7fd;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      min-height: 112px;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+
+    .decx-shell {
+      width: min(1220px, calc(100vw - 120px));
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e7eff8 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      margin: 0 auto;
+    }
+
+    .decx-header {
+      background: #075a82;
+      color: #fff;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .decx-header h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.6vw, 2.15rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .decx-context {
+      font-size: 0.8rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: #cce7f8;
+      white-space: nowrap;
+    }
+
+    .decx-stage {
+      position: relative;
+      padding: 20px 32px 16px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 520px;
+    }
+
+    .decx-links {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .decx-server-zone {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .decx-server-wrap {
+      width: min(220px, 24vw);
+      min-width: 170px;
+    }
+
+    .decx-server-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.22));
+    }
+
+    .decx-controller-label {
+      margin: 2px 0 4px;
+      font-size: 0.86rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: #214f6b;
+    }
+
+    .decx-dropzone {
+      width: min(540px, 88%);
+      min-height: 92px;
+      border: 2px dashed #84a9c4;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.86);
+      padding: 10px 12px;
+      display: grid;
+      gap: 8px;
+      align-content: center;
+      justify-items: center;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .decx-dropzone.is-over {
+      border-color: #0e85ba;
+      box-shadow: 0 0 0 3px rgba(14, 133, 186, 0.12);
+      transform: scale(1.01);
+    }
+
+    .decx-drop-hint {
+      margin: 0;
+      color: #2e536e;
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .decx-central-stack {
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .decx-central-chip {
+      border-radius: 10px;
+      padding: 6px 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.76rem;
+      letter-spacing: 0.03em;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .decx-central-chip.mgmt {
+      background: linear-gradient(180deg, #119661 0%, #0a7349 100%);
+    }
+
+    .decx-central-chip.ctrl {
+      background: linear-gradient(180deg, #e61919 0%, #b50f0f 100%);
+    }
+
+    .decx-status-row {
+      width: min(760px, 94%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .decx-status {
+      margin: 0;
+      color: #315269;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .decx-objective {
+      margin: 4px 0 2px;
+      padding: 8px 14px;
+      background: #eff6fb;
+      border: 1px solid #c5dced;
+      border-radius: 999px;
+      color: #2d5270;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      max-width: min(920px, 96%);
+    }
+
+    .decx-done {
+      margin: 0;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: #e9f8ef;
+      border: 1px solid #8ad5a6;
+      color: #16663a;
+      font-weight: 700;
+      font-size: 0.82rem;
+      opacity: 0;
+      transform: translateY(4px) scale(0.96);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .decx-done.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .decx-switch-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: end;
+      padding: 6px 24px 2px;
+    }
+
+    .decx-switch-node {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .decx-chips {
+      width: min(240px, 100%);
+      display: grid;
+      gap: 6px;
+    }
+
+    .decx-chip {
+      border-radius: 12px;
+      padding: 9px 12px;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: left;
+      font-size: 0.93rem;
+      user-select: none;
+      transition: transform 140ms ease, opacity 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .decx-chip[data-plane="mgmt"] {
+      background: linear-gradient(180deg, #119661 0%, #0a7349 100%);
+    }
+
+    .decx-chip[data-plane="control"] {
+      background: linear-gradient(180deg, #e61919 0%, #b50f0f 100%);
+    }
+
+    .decx-chip[data-plane="data"] {
+      background: linear-gradient(180deg, #0f4fa9 0%, #0a3b80 100%);
+    }
+
+    .decx-chip[draggable="true"] {
+      cursor: grab;
+    }
+
+    .decx-chip[draggable="true"]:active {
+      cursor: grabbing;
+    }
+
+    .decx-chip.is-dragging {
+      opacity: 0.58;
+      transform: scale(0.98);
+    }
+
+    .decx-chip.is-placed {
+      opacity: 0.18;
+      filter: grayscale(1);
+      text-decoration: line-through;
+      pointer-events: none;
+      box-shadow: none;
+      transform: scale(0.97);
+    }
+
+    .decx-switch-img {
+      width: min(238px, 86%);
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+    }
+
+    .decx-switch-label {
+      font-size: 0.79rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5e7183;
+      font-weight: 700;
+      margin-top: -2px;
+    }
+
+    .recapx-shell {
+      width: min(1120px, 94vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e8f0f8 100%);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      padding: 22px 24px;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      display: grid;
+      gap: 16px;
+    }
+
+    .recapx-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid #cfe0ec;
+      padding-bottom: 12px;
+    }
+
+    .recapx-head h2 {
+      margin: 0;
+      color: #0b5f85;
+      font-size: clamp(1.35rem, 2.5vw, 2.05rem);
+      letter-spacing: -0.01em;
+    }
+
+    .recapx-head p {
+      margin: 0;
+      color: #5b7287;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .recapx-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .recapx-item {
+      background: #ffffff;
+      border: 1px solid #d6e4f1;
+      border-left: 8px solid #0fb2d6;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(11, 61, 96, 0.08);
+      padding: 12px 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .recapx-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: #ebf7fd;
+      border: 1px solid #b9dff1;
+      color: #0a6b95;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .recapx-item strong {
+      color: #0b5f85;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .recapx-item span {
+      color: #324d62;
+      font-size: 0.95rem;
+      line-height: 1.42;
+    }
+
+    .recapx-takeaway {
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #294a63;
+      font-size: 1.04rem;
+      line-height: 1.45;
+      box-shadow: 0 8px 18px rgba(11, 61, 96, 0.07);
+    }
+
+    .recapx-takeaway strong {
+      color: #0b5f85;
+    }
+
+    .handoffx-shell {
+      width: min(980px, 92vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e8f0f8 100%);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      padding: 30px 30px 26px;
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .handoffx-tag {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #6d8397;
+      font-weight: 700;
+    }
+
+    .handoffx-title {
+      margin: 0;
+      color: #0b5f85;
+      font-size: clamp(1.55rem, 3.1vw, 2.6rem);
+      letter-spacing: -0.01em;
+      line-height: 1.12;
+    }
+
+    .handoffx-text {
+      margin: 0;
+      color: #2e4f66;
+      font-size: clamp(1rem, 1.4vw, 1.24rem);
+      line-height: 1.5;
+      max-width: 58ch;
+    }
+
+    .handoffx-btn {
+      margin-top: 6px;
+      border: 1px solid #0d6f9b;
+      background: linear-gradient(180deg, #1696cb 0%, #0f78a8 100%);
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(9, 87, 123, 0.24);
+      transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+    }
+
+    .handoffx-btn:hover,
+    .handoffx-btn:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 13px 24px rgba(9, 87, 123, 0.28);
+      filter: saturate(1.05);
+      outline: none;
+    }
+
+    .ayax-shell {
+      width: min(1180px, 94vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e8f0f8 100%);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      padding: 20px 22px 16px;
+      display: grid;
+      gap: 12px;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .ayax-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #ccdfeb;
+      padding-bottom: 10px;
+    }
+
+    .ayax-head h2 {
+      margin: 0;
+      color: #0b5f85;
+      font-size: clamp(1.3rem, 2.4vw, 2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .ayax-head p {
+      margin: 0;
+      color: #5d7387;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .ayax-objective {
+      margin: 0;
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-left: 8px solid #0fb2d6;
+      border-radius: 10px;
+      color: #2b4e66;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      box-shadow: 0 8px 18px rgba(11, 61, 96, 0.08);
+    }
+
+    .ayax-core {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .ayax-stack {
+      background: #f7fbff;
+      border: 1px solid #d2e4f0;
+      border-radius: 10px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .ayax-layer {
+      border-radius: 10px;
+      color: #fff;
+      padding: 12px 14px;
+      box-shadow: 0 8px 18px rgba(10, 56, 92, 0.16);
+    }
+
+    .ayax-layer strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .ayax-layer span {
+      display: block;
+      font-size: 0.92rem;
+      opacity: 0.95;
+      line-height: 1.35;
+    }
+
+    .ayax-layer.app {
+      background: linear-gradient(180deg, #0f5f89 0%, #0b4d70 100%);
+    }
+
+    .ayax-layer.ctrl {
+      background: linear-gradient(180deg, #1c7aa1 0%, #145d7d 100%);
+    }
+
+    .ayax-layer.infra {
+      background: linear-gradient(180deg, #1f4f7e 0%, #15385b 100%);
+    }
+
+    .ayax-api {
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 7px 16px rgba(11, 61, 96, 0.08);
+      display: grid;
+      gap: 4px;
+    }
+
+    .ayax-api strong {
+      color: #0b5f85;
+      font-size: 0.96rem;
+      letter-spacing: -0.01em;
+    }
+
+    .ayax-api span {
+      color: #35546b;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .ayax-api small {
+      color: #5f778d;
+      font-size: 0.83rem;
+    }
+
+    .ayax-compare {
+      background: #ffffff;
+      border: 1px solid #d4e4f0;
+      border-radius: 10px;
+      box-shadow: 0 8px 18px rgba(11, 61, 96, 0.08);
+      overflow: hidden;
+    }
+
+    .ayax-compare-head {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ayax-compare-head div {
+      padding: 9px 10px;
+      color: #fff;
+      font-size: 0.84rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .ayax-compare-head div:first-child {
+      background: #0e82b2;
+    }
+
+    .ayax-compare-head div:last-child {
+      background: #185f8a;
+    }
+
+    .ayax-row {
+      display: grid;
+      grid-template-columns: 0.74fr 1fr 1fr;
+      border-top: 1px solid #e3eef6;
+    }
+
+    .ayax-row span {
+      padding: 8px 10px;
+      font-size: 0.86rem;
+      color: #32516a;
+      line-height: 1.35;
+    }
+
+    .ayax-row span:first-child {
+      background: #f5fafe;
+      color: #5c7286;
+      font-weight: 700;
+    }
+
+    .ayax-scenario {
+      margin-top: 2px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ayax-step {
+      background: #ffffff;
+      border: 1px solid #d5e4f0;
+      border-radius: 10px;
+      padding: 8px 9px;
+      box-shadow: 0 7px 15px rgba(11, 61, 96, 0.07);
+      display: grid;
+      gap: 4px;
+    }
+
+    .ayax-step b {
+      color: #0b6791;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .ayax-step p {
+      margin: 0;
+      color: #35546a;
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .ayax-overview-stack {
+      background: #f7fbff;
+      border: 1px solid #d2e4f0;
+      border-radius: 10px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .ayax-overview-layer {
+      border-radius: 10px;
+      color: #ffffff;
+      padding: 11px 13px;
+      box-shadow: 0 8px 18px rgba(10, 56, 92, 0.14);
+    }
+
+    .ayax-overview-layer strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .ayax-overview-layer span {
+      display: block;
+      font-size: 0.9rem;
+      opacity: 0.95;
+      line-height: 1.35;
+    }
+
+    .ayax-overview-layer.app { background: linear-gradient(180deg, #0f5f89 0%, #0b4d70 100%); }
+    .ayax-overview-layer.ctrl { background: linear-gradient(180deg, #1c7aa1 0%, #145d7d 100%); }
+    .ayax-overview-layer.infra { background: linear-gradient(180deg, #1f4f7e 0%, #15385b 100%); }
+
+    .ayax-overview-link {
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #35546b;
+      font-size: 0.9rem;
+      box-shadow: 0 7px 16px rgba(11, 61, 96, 0.08);
+    }
+
+    .ayax-overview-link strong {
+      color: #0b5f85;
+    }
+
+    .ayaf-shell {
+      width: min(1080px, 93vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e8f0f8 100%);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      padding: 20px 22px;
+      display: grid;
+      gap: 12px;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .ayaf-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #ccdfeb;
+      padding-bottom: 10px;
+    }
+
+    .ayaf-head h2 {
+      margin: 0;
+      color: #0b5f85;
+      font-size: clamp(1.3rem, 2.4vw, 2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .ayaf-head p {
+      margin: 0;
+      color: #5d7387;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .ayaf-objective {
+      margin: 0;
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-left: 8px solid #0fb2d6;
+      border-radius: 10px;
+      color: #2b4e66;
+      padding: 10px 12px;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      box-shadow: 0 8px 18px rgba(11, 61, 96, 0.08);
+    }
+
+    .ayaf-core {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .ayaf-card {
+      background: #ffffff;
+      border: 1px solid #d6e4f1;
+      border-radius: 10px;
+      box-shadow: 0 8px 18px rgba(11, 61, 96, 0.08);
+      padding: 12px 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .ayaf-card h3 {
+      margin: 0;
+      color: #0b5f85;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .ayaf-card p {
+      margin: 0;
+      color: #35546a;
+      font-size: 0.92rem;
+      line-height: 1.42;
+    }
+
+    .ayaf-card .ask {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid #e2edf5;
+      color: #4f6a7f;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .ayaf-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ayaf-step {
+      background: #ffffff;
+      border: 1px solid #d5e4f0;
+      border-radius: 10px;
+      padding: 8px 9px;
+      box-shadow: 0 7px 15px rgba(11, 61, 96, 0.07);
+      display: grid;
+      gap: 4px;
+    }
+
+    .ayaf-step b {
+      color: #0b6791;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .ayaf-step p {
+      margin: 0;
+      color: #35546a;
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .aycx-shell {
+      width: min(1180px, 94vw);
+      border: 1px solid #d3e2ee;
+      background: linear-gradient(180deg, #edf4fa 0%, #e8f0f8 100%);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.1);
+      overflow: hidden;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .aycx-head {
+      background: #075a82;
+      color: #ffffff;
+      padding: 16px 22px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .aycx-head h2 {
+      margin: 0;
+      font-size: clamp(1.3rem, 2.4vw, 2rem);
+      letter-spacing: -0.01em;
+    }
+
+    .aycx-head p {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #cde6f7;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .aycx-body {
+      padding: 14px 16px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .aycx-col {
+      display: grid;
+      gap: 8px;
+    }
+
+    .aycx-col h3 {
+      margin: 0 0 2px;
+      color: #0a6088;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .aycx-item {
+      background: #ffffff;
+      border: 1px solid #d4e4f0;
+      border-radius: 10px;
+      box-shadow: 0 7px 16px rgba(11, 61, 96, 0.08);
+      padding: 11px 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .aycx-item.challenge {
+      border-left: 8px solid #f0a83a;
+    }
+
+    .aycx-item.strategy {
+      border-left: 8px solid #1686b8;
+    }
+
+    .aycx-item strong {
+      color: #0b5f85;
+      font-size: 0.98rem;
+      letter-spacing: -0.01em;
+    }
+
+    .aycx-item span {
+      color: #35546a;
+      font-size: 0.9rem;
+      line-height: 1.38;
+    }
+
+    .aycx-note {
+      grid-column: 1 / -1;
+      margin-top: 2px;
+      background: #ffffff;
+      border: 1px solid #cfe0ec;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #2d5067;
+      font-size: 0.94rem;
+      line-height: 1.42;
+      box-shadow: 0 7px 16px rgba(11, 61, 96, 0.07);
+    }
+
+    .aycx-note strong {
+      color: #0b5f85;
+    }
+
+    .ayct-shell {
+      width: min(1240px, 95vw);
+      border: 1px solid #9dc7dc;
+      background: #dce9f2;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.14);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .ayct-head {
+      background: #0e6a91;
+      color: #ffffff;
+      padding: 16px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .ayct-head h2 {
+      margin: 0;
+      font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .ayct-body {
+      padding: 14px 16px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .ayct-card {
+      background: #ffffff;
+      border: 1px solid #c3d9e7;
+      box-shadow: 0 10px 18px rgba(9, 56, 89, 0.08);
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+      display: grid;
+      min-height: 390px;
+    }
+
+    .ayct-card-head {
+      background: linear-gradient(180deg, #0c5f86 0%, #0a5274 100%);
+      color: #ffffff;
+      padding: 11px 16px 9px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .ayct-card-head h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .ayct-card-head p {
+      margin: 0;
+      color: #d1e9f8;
+      font-size: 0.86rem;
+      font-style: italic;
+      line-height: 1.25;
+    }
+
+    .ayct-card.right .ayct-card-head {
+      background: linear-gradient(180deg, #247da2 0%, #1d6989 100%);
+    }
+
+    .ayct-list {
+      margin: 0;
+      padding: 12px 20px 14px 26px;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .ayct-list li {
+      color: #1b2a38;
+      font-size: 1rem;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      min-height: 64px;
+      padding: 6px 6px;
+    }
+
+    .ayct-list li::before {
+      content: "▸";
+      color: #0f6f98;
+      font-weight: 800;
+      flex: 0 0 auto;
+      transform: translateY(1px);
+    }
+
+    .ayct-note {
+      margin: 0 16px 0;
+      background: #edf6fc;
+      border: 1px solid #b8d3e4;
+      border-radius: 2px;
+      color: #0e5f83;
+      padding: 8px 16px;
+      font-size: 0.97rem;
+      font-style: italic;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .ayct-footer {
+      margin-top: 8px;
+      background: #0b597d;
+      color: #d2e8f6;
+      padding: 6px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.83rem;
+      letter-spacing: 0.02em;
+    }
+
+    .ayaog-shell {
+      width: min(1240px, 95vw);
+      border: 1px solid #0f4d74;
+      background: #041a33;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 18px 38px rgba(4, 24, 44, 0.34);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      color: #d7e8f6;
+    }
+
+    .ayaog-head {
+      background: #1d789d;
+      color: #ffffff;
+      padding: 16px 22px;
+    }
+
+    .ayaog-head h2 {
+      margin: 0;
+      font-size: clamp(1.55rem, 2.7vw, 2.2rem);
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .ayaog-body {
+      padding: 14px 16px 10px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .ayaog-card {
+      background: #092544;
+      border: 1px solid #1591c2;
+      border-left: 10px solid #15a3d6;
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 10px;
+      min-height: 176px;
+    }
+
+    .ayaog-card h3 {
+      margin: 0;
+      color: #f3fbff;
+      font-size: 1.65rem;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .ayaog-sub {
+      margin: 0;
+      color: #00d2ff;
+      font-size: 1.22rem;
+      font-style: italic;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .ayaog-text {
+      margin: 0;
+      color: #c4d8e8;
+      font-size: 1.18rem;
+      line-height: 1.42;
+    }
+
+    .ayaog-tags {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #d5e9f8;
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .ayaog-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .ayaog-chip {
+      border: 1px solid #15a3d6;
+      background: #0c3a5f;
+      color: #ebf8ff;
+      border-radius: 2px;
+      padding: 6px 10px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .ayaog-footer {
+      margin-top: 2px;
+      background: #0a5d82;
+      color: #d7ebf8;
+      padding: 7px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .abdm-shell {
+      width: min(1240px, 95vw);
+      border: 1px solid #9dc7dc;
+      background: #dce9f2;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(10, 50, 83, 0.14);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+    }
+
+    .abdm-head {
+      background: #0e6a91;
+      color: #ffffff;
+      padding: 16px 22px;
+    }
+
+    .abdm-head h2 {
+      margin: 0;
+      font-size: clamp(1.48rem, 2.55vw, 2.1rem);
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .abdm-body {
+      padding: 14px 16px 10px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .abdm-track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .abdm-track::before {
+      content: "";
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 154px;
+      height: 4px;
+      background: #2f89ac;
+      opacity: 0.75;
+      z-index: 0;
+      border-radius: 999px;
+    }
+
+    .abdm-card {
+      position: relative;
+      z-index: 1;
+      background: #ffffff;
+      border: 1px solid #c3d9e7;
+      box-shadow: 0 10px 18px rgba(9, 56, 89, 0.08);
+      border-radius: 2px;
+      min-height: 398px;
+      padding: 12px 14px 12px;
+      display: grid;
+      justify-items: center;
+      align-content: start;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .abdm-step {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: #1d779d;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-top: -4px;
+    }
+
+    .abdm-card h3 {
+      margin: 18px 0 0;
+      color: #0b5f85;
+      font-size: 1.06rem;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+      min-height: 46px;
+      display: grid;
+      place-items: center;
+    }
+
+    .abdm-card p {
+      margin: 28px 0 0;
+      color: #162334;
+      font-size: 1.02rem;
+      line-height: 1.42;
+      max-width: 32ch;
+    }
+
+    .abdm-note {
+      margin: 0;
+      background: #edf6fc;
+      border: 1px solid #b8d3e4;
+      border-radius: 2px;
+      color: #0e5f83;
+      padding: 8px 16px;
+      font-size: 0.97rem;
+      font-style: italic;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+
+    .abdm-footer {
+      margin-top: 2px;
+      background: #0b597d;
+      color: #d7ebf8;
+      padding: 7px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .abda-shell {
+      width: min(1240px, 95vw);
+      border: 1px solid #0d4c72;
+      background: radial-gradient(1200px 520px at 50% -30%, rgba(29, 157, 203, 0.16), transparent 64%), #041b34;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 18px 38px rgba(4, 24, 44, 0.34);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      color: #d9e9f6;
+    }
+
+    .abda-head {
+      background: #0da0be;
+      color: #ffffff;
+      padding: 16px 22px;
+    }
+
+    .abda-head h2 {
+      margin: 0;
+      font-size: clamp(1.48rem, 2.55vw, 2.1rem);
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .abda-body {
+      padding: 14px 16px 10px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .abda-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .abda-card {
+      background: rgba(8, 35, 60, 0.92);
+      border: 1px solid #1b7ea8;
+      box-shadow: 0 10px 18px rgba(9, 56, 89, 0.2);
+      border-radius: 2px;
+      min-height: 184px;
+      padding: 10px 12px;
+      display: grid;
+      align-content: start;
+      gap: 7px;
+    }
+
+    .abda-card.span-2 {
+      grid-column: span 2;
+    }
+
+    .abda-card.span-3 {
+      grid-column: span 3;
+    }
+
+    .abda-card h3 {
+      margin: 0;
+      color: #eef9ff;
+      font-size: 1.02rem;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    .abda-card .kind {
+      margin: 0;
+      color: #73d8ff;
+      font-size: 0.9rem;
+      line-height: 1.2;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .abda-card p {
+      margin: 4px 0 0;
+      color: #c5d9e9;
+      font-size: 0.95rem;
+      line-height: 1.42;
+    }
+
+    .abda-card.ansible { border-color: #1aa7d8; }
+    .abda-card.python { border-color: #218db8; }
+    .abda-card.ovsdb { border-color: #2b84d4; }
+    .abda-card.netconf { border-color: #00a897; }
+    .abda-card.rest { border-color: #8b44b7; }
+
+    .abda-note {
+      margin: 0;
+      background: #0a3b62;
+      border: 1px solid #1f7ea5;
+      border-radius: 2px;
+      color: #d4ebfa;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      line-height: 1.42;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .abda-footer {
+      margin-top: 2px;
+      background: #0b597d;
+      color: #d7ebf8;
+      padding: 7px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .abdf-shell {
+      width: min(1240px, 95vw);
+      border: 1px solid #0d4c72;
+      background: #041b34;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 18px 38px rgba(4, 24, 44, 0.34);
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      color: #d9e9f6;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+    }
+
+    .abdf-main {
+      padding: 18px 18px 10px;
+      background: linear-gradient(180deg, #03162f 0%, #041b34 100%);
+      border-right: 1px solid rgba(29, 157, 203, 0.2);
+      display: grid;
+      gap: 12px;
+    }
+
+    .abdf-head .num {
+      color: #00c4ef;
+      font-size: 2.9rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0 0 8px;
+    }
+
+    .abdf-head h2 {
+      margin: 0;
+      font-size: clamp(2.1rem, 4.8vw, 4rem);
+      letter-spacing: -0.02em;
+      color: #f4fbff;
+      line-height: 1.04;
+      max-width: 9ch;
+      font-weight: 800;
+    }
+
+    .abdf-head h2 span {
+      color: #00c4ef;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .abdf-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .abdf-list li {
+      border: 1px solid #16658f;
+      background: #07233f;
+      color: #eff8ff;
+      padding: 10px 12px;
+      font-size: 1.02rem;
+      line-height: 1.4;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .abdf-list li::before {
+      content: "✔";
+      color: #00c4ef;
+      font-weight: 800;
+      font-size: 1.45rem;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .abdf-side {
+      padding: 20px 14px 14px;
+      background: #0b2a4a;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .abdf-side h3 {
+      margin: 0;
+      color: #00c4ef;
+      font-size: 1.95rem;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .abdf-bubbles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .abdf-bubble {
+      border: 2px solid #00c4ef;
+      background: rgba(7, 70, 112, 0.52);
+      border-radius: 999px;
+      min-height: 92px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 8px;
+      color: #f0fbff;
+      font-size: 0.84rem;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
+    .abdf-bubble.single {
+      grid-column: 1 / 2;
+    }
+
+    .abdf-footer {
+      grid-column: 1 / -1;
+      background: #0b597d;
+      color: #d7ebf8;
+      padding: 9px 16px;
+      font-size: 0.86rem;
+      text-align: center;
+      letter-spacing: 0.01em;
+    }
+
+    .apix-shell {
+      width: min(1200px, 95vw);
+      border: 1px solid #1d3a55;
+      background:
+        radial-gradient(1200px 420px at 50% -20%, rgba(33, 153, 243, 0.18), transparent 60%),
+        linear-gradient(180deg, #071627 0%, #0a2138 100%);
+      border-radius: 14px;
+      box-shadow: 0 20px 44px rgba(3, 11, 20, 0.45);
+      overflow: hidden;
+      font-family: "DM Sans", "Segoe UI", sans-serif;
+      color: #d8e8f6;
+    }
+
+    .apix-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(138, 176, 206, 0.24);
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .apix-head h2 {
+      margin: 0;
+      font-size: clamp(1.28rem, 2.4vw, 1.9rem);
+      letter-spacing: -0.01em;
+      color: #f4fbff;
+    }
+
+    .apix-head p {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #86b8e2;
+      white-space: nowrap;
+    }
+
+    .apix-stage {
+      position: relative;
+      padding: 16px 16px 10px;
+      display: grid;
+      gap: 12px;
+      min-height: 420px;
+    }
+
+    .apix-links {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 210px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.78;
+    }
+
+    .apix-nodes {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .apix-node {
+      background: rgba(12, 32, 50, 0.78);
+      border: 1px solid rgba(135, 178, 212, 0.36);
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 24px rgba(0, 0, 0, 0.22);
+      padding: 12px;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      min-height: 140px;
+      transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .apix-node-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.55rem;
+      background: linear-gradient(180deg, #1e4668 0%, #173752 100%);
+      border: 1px solid rgba(157, 204, 234, 0.32);
+    }
+
+    .apix-node h3 {
+      margin: 0;
+      color: #ecf7ff;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .apix-node p {
+      margin: 0;
+      color: #9cc1de;
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .apix-node.is-active {
+      border-color: #5bc0ff;
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 2px rgba(91, 192, 255, 0.2), 0 12px 26px rgba(0, 0, 0, 0.26);
+    }
+
+    .apix-node.is-processing {
+      animation: apix-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes apix-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(91, 192, 255, 0.25); }
+      100% { box-shadow: 0 0 0 14px rgba(91, 192, 255, 0); }
+    }
+
+    .apix-packet {
+      position: absolute;
+      z-index: 3;
+      min-width: 120px;
+      max-width: 200px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #1ca4e8 0%, #1278b1 100%);
+      border: 1px solid rgba(170, 229, 255, 0.45);
+      color: #f4fbff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-align: center;
+      box-shadow: 0 10px 22px rgba(7, 30, 45, 0.45);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.94);
+      transition: left 1180ms cubic-bezier(0.22, 1, 0.36, 1), top 1180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease, transform 220ms ease, background 180ms ease;
+      pointer-events: none;
+    }
+
+    .apix-packet.is-visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .apix-packet.is-response {
+      background: linear-gradient(180deg, #2ab57c 0%, #158f61 100%);
+      border-color: rgba(180, 255, 220, 0.5);
+    }
+
+    .apix-step {
+      position: relative;
+      z-index: 2;
+      margin: 0;
+      background: rgba(14, 37, 57, 0.76);
+      border: 1px solid rgba(121, 163, 196, 0.32);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #cde5f8;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      min-height: 46px;
+    }
+
+    .apix-chatlog {
+      position: relative;
+      z-index: 2;
+      background: rgba(9, 25, 40, 0.64);
+      border: 1px solid rgba(117, 159, 190, 0.28);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 92px;
+      max-height: 140px;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .apix-bubble {
+      max-width: min(72%, 540px);
+      border-radius: 12px;
+      padding: 7px 10px;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      border: 1px solid transparent;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .apix-bubble.user {
+      justify-self: end;
+      background: linear-gradient(180deg, #1f8cd0 0%, #176da5 100%);
+      color: #f3fbff;
+      border-color: rgba(165, 218, 248, 0.4);
+    }
+
+    .apix-bubble.bot {
+      justify-self: start;
+      background: #eef7ff;
+      color: #14354f;
+      border-color: #c9e0f2;
+    }
+
+    .apix-controls {
+      padding: 12px 16px 16px;
+      border-top: 1px solid rgba(132, 173, 203, 0.22);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .apix-input {
+      border: 1px solid rgba(138, 183, 214, 0.42);
+      border-radius: 999px;
+      background: rgba(9, 25, 40, 0.74);
+      color: #e7f3fb;
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    .apix-input:focus {
+      border-color: #68c8ff;
+      box-shadow: 0 0 0 2px rgba(104, 200, 255, 0.2);
+    }
+
+    .apix-send {
+      border: 1px solid #2ea9e6;
+      background: linear-gradient(180deg, #1ca4e8 0%, #1278b1 100%);
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .apix-send:disabled,
+    .apix-input:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .deck.title-slide .profile-content {
+      max-width: min(980px, 92vw);
+      text-align: center;
+      justify-items: center;
+      gap: 0.35rem;
+    }
+
+    .deck.title-slide .profile-name {
+      font-size: clamp(2rem, 5.6vw, 5rem);
+      letter-spacing: -0.03em;
+      line-height: 1.02;
+    }
+
+    .deck.title-slide .profile-tag {
+      font-size: 0.84rem;
+      letter-spacing: 0.18em;
+      color: #6c7177;
+    }
+
+    .menu-hotspot {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 16px;
+      height: 100vh;
+      z-index: 8;
+    }
+
+    .side-menu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: min(220px, 78%);
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.45rem;
+      background: var(--menu-bg);
+      border-right: 1px solid var(--line);
+      backdrop-filter: blur(4px);
+      transform: translateX(-16px) scale(0.985);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 240ms var(--ease),
+        transform 240ms var(--ease),
+        visibility 0ms linear 240ms;
+      z-index: 12;
+    }
+
+    .side-menu.is-visible {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 240ms var(--ease),
+        transform 240ms var(--ease),
+        visibility 0ms linear 0ms;
+    }
+
+    .menu-title {
+      margin: 0 0 0.55rem;
+      font-size: 0.74rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .menu-link {
+      width: fit-content;
+      border: 0;
+      background: transparent;
+      color: #1b1b1b;
+      font-size: 0.93rem;
+      position: relative;
+      padding: 0.25rem 0;
+      cursor: pointer;
+    }
+
+    .menu-link.submenu {
+      padding-left: 14px;
+      font-size: 0.88rem;
+      color: #455468;
+    }
+
+    .menu-link.submenu::before {
+      content: "└ ";
+      color: #8aa0ba;
+    }
+
+    .menu-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.1rem;
+      height: 1px;
+      background: currentColor;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 170ms ease;
+    }
+
+    .menu-link:hover::after,
+    .menu-link:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    .slide-nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 1px solid #d8d8d8;
+      background: rgba(255, 255, 255, 0.95);
+      color: #111111;
+      border-radius: 999px;
+      padding: 0.62rem 1rem;
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 200ms ease, transform 200ms ease, visibility 0ms linear 200ms;
+      z-index: 11;
+    }
+
+    .slide-nav-btn.is-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(-50%) translateX(0);
+      transition: opacity 200ms ease, transform 200ms ease, visibility 0ms linear 0ms;
+    }
+
+    .prev-slide-btn {
+      left: 28px;
+    }
+
+    .next-slide-btn {
+      right: 28px;
+    }
+
+    #menuItems {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    @media (max-width: 1050px) {
+      .top-nav {
+        height: 68px;
+        border-radius: 20px;
+      }
+
+      .top-link {
+        font-size: clamp(0.8rem, 3vw, 1rem);
+        letter-spacing: 0.05em;
+      }
+
+      .deck {
+        padding-top: 100px;
+      }
+
+      .profile-content {
+        width: min(95vw, 760px);
+        min-height: calc(100vh - 150px);
+      }
+
+      .decx-stage {
+        min-height: 500px;
+        padding: 14px 16px 10px;
+      }
+
+      .decx-switch-grid {
+        gap: 10px;
+        padding: 4px 8px 0;
+      }
+
+      .decx-chip {
+        font-size: 0.82rem;
+        padding: 8px 10px;
+      }
+
+      .decx-status-row {
+        width: 96%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .recapx-shell {
+        width: min(95vw, 760px);
+        padding: 16px 14px;
+      }
+
+      .recapx-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .handoffx-shell {
+        width: min(95vw, 760px);
+        padding: 20px 16px 18px;
+      }
+
+      .ayax-shell {
+        width: min(95vw, 760px);
+        padding: 14px 12px;
+      }
+
+      .ayax-core {
+        grid-template-columns: 1fr;
+      }
+
+      .ayax-scenario {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ayaf-shell {
+        width: min(95vw, 760px);
+        padding: 14px 12px;
+      }
+
+      .ayaf-core {
+        grid-template-columns: 1fr;
+      }
+
+      .ayaf-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .aycx-body {
+        grid-template-columns: 1fr;
+      }
+
+      .ayct-shell {
+        width: min(95vw, 760px);
+      }
+
+      .ayct-body {
+        grid-template-columns: 1fr;
+      }
+
+      .ayct-card {
+        min-height: 320px;
+      }
+
+      .ayct-list li {
+        min-height: auto;
+      }
+
+      .ayaog-shell {
+        width: min(95vw, 760px);
+      }
+
+      .ayaog-card {
+        min-height: auto;
+      }
+
+      .ayaog-tags {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .ayaog-chip-row {
+        justify-content: flex-start;
+      }
+
+      .abdm-shell {
+        width: min(95vw, 760px);
+      }
+
+      .abdm-track {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .abdm-track::before {
+        display: none;
+      }
+
+      .abdm-card {
+        min-height: auto;
+        justify-items: start;
+        text-align: left;
+      }
+
+      .abdm-step {
+        width: 64px;
+        height: 64px;
+        font-size: 1.4rem;
+        margin-top: 0;
+      }
+
+      .abdm-card h3,
+      .abdm-card p {
+        margin: 0;
+        min-height: auto;
+      }
+
+      .abda-shell {
+        width: min(95vw, 760px);
+      }
+
+      .abda-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .abda-card.span-2,
+      .abda-card.span-3 {
+        grid-column: auto;
+      }
+
+      .abdf-shell {
+        width: min(95vw, 760px);
+        grid-template-columns: 1fr;
+      }
+
+      .abdf-main {
+        border-right: 0;
+      }
+
+      .abdf-side h3 {
+        text-align: left;
+      }
+
+      .abdf-bubbles {
+        grid-template-columns: 1fr;
+      }
+
+      .abdf-bubble.single {
+        grid-column: auto;
+      }
+
+      .apix-nodes {
+        grid-template-columns: 1fr;
+      }
+
+      .apix-links {
+        display: none;
+      }
+
+      .apix-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .apix-bubble {
+        max-width: 92%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="device-blocker" id="deviceBlocker" role="alert" aria-live="assertive">
+    <div class="device-blocker-card">
+      <h2>Presentation Unavailable on This Device</h2>
+      <p>This presentation is not available on phone or tablet devices.</p>
+      <p>Please open it on a laptop or desktop computer.</p>
+    </div>
+  </div>
+  <canvas class="bg-canvas" id="bgCanvas" aria-hidden="true"></canvas>
+  <nav class="top-nav" aria-label="Navigation principale">
+    <button class="top-link" type="button" data-target="mamoune">Mamoune</button>
+    <button class="top-link" type="button" data-target="aya">Aya</button>
+    <button class="top-link" type="button" data-target="abdellah">Abdellah</button>
+  </nav>
+
+  <main class="deck" role="presentation">
+    <div class="menu-hotspot" aria-hidden="true"></div>
+    <aside class="side-menu" aria-label="Table des matieres du presentateur">
+      <p class="menu-title" id="menuTitle">Menu</p>
+      <div id="menuItems"></div>
+    </aside>
+    <article class="profile-content" id="slideContent" aria-live="polite">
+      <p class="profile-tag" id="slideTag"></p>
+      <h1 class="profile-name" id="slideTitle"></h1>
+      <p class="profile-text" id="slideText"></p>
+      <div class="slide-rich" id="slideRich" hidden></div>
+    </article>
+  </main>
+  <button class="slide-nav-btn prev-slide-btn" id="prevSlideBtn" type="button">Precedent</button>
+  <button class="slide-nav-btn next-slide-btn" id="nextSlideBtn" type="button">Suivant</button>
+
+  <script>
+    // Background engine is isolated in its own scope to avoid side effects
+    // with future presentation/menu code changes.
+    {
+    const bgCanvas = document.getElementById("bgCanvas");
+    const bgCtx = bgCanvas.getContext("2d", { alpha: true });
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pointer = { x: -9999, y: -9999, active: false };
+    const dots = [];
+    const DOT_SPACING = 36;
+    const DOT_RADIUS = 3.6;
+    const INFLUENCE_RADIUS = 220;
+    let canvasW = 0;
+    let canvasH = 0;
+    let rafId = null;
+
+    const setupDots = () => {
+      dots.length = 0;
+      const cols = Math.ceil(canvasW / DOT_SPACING) + 1;
+      const rows = Math.ceil(canvasH / DOT_SPACING) + 1;
+
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const px = x * DOT_SPACING;
+          const py = y * DOT_SPACING;
+          dots.push({
+            x: px,
+            y: py,
+            seed: Math.random() * Math.PI * 2,
+            jitter: Math.random() * 0.75 + 0.35
+          });
+        }
+      }
+    };
+
+    const resizeCanvas = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvasW = window.innerWidth;
+      canvasH = window.innerHeight;
+      bgCanvas.width = Math.floor(canvasW * dpr);
+      bgCanvas.height = Math.floor(canvasH * dpr);
+      bgCanvas.style.width = `${canvasW}px`;
+      bgCanvas.style.height = `${canvasH}px`;
+      bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      setupDots();
+    };
+
+    const drawStatic = () => {
+      bgCtx.clearRect(0, 0, canvasW, canvasH);
+      dots.forEach((dot) => {
+        const mix = 0.5 + 0.5 * Math.sin(dot.seed + dot.x * 0.01);
+        const r = Math.round(52 + mix * 165);
+        const g = Math.round(85 + (1 - mix) * 18);
+        const b = Math.round(214 + mix * 24);
+        bgCtx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.32)`;
+        bgCtx.beginPath();
+        bgCtx.arc(dot.x, dot.y, 1.5, 0, Math.PI * 2);
+        bgCtx.fill();
+      });
+    };
+
+    const renderBackground = (time) => {
+      const t = time * 0.001;
+      bgCtx.clearRect(0, 0, canvasW, canvasH);
+
+      dots.forEach((dot) => {
+        const basePulse = Math.sin(t * 0.8 + dot.seed) * dot.jitter;
+        let dx = 0;
+        let dy = basePulse * 1.5;
+        let alpha = 0.28;
+        let hueMix = 0;
+
+        if (pointer.active) {
+          const vx = dot.x - pointer.x;
+          const vy = dot.y - pointer.y;
+          const dist = Math.hypot(vx, vy);
+          if (dist < INFLUENCE_RADIUS) {
+            const force = (1 - dist / INFLUENCE_RADIUS) ** 2;
+            const safeDist = Math.max(dist, 0.001);
+            dx += (vx / safeDist) * force * 11;
+            dy += (vy / safeDist) * force * 11;
+            alpha += force * 0.36;
+            hueMix = force;
+          }
+        }
+
+        const x = dot.x + dx;
+        const y = dot.y + dy;
+        const length = DOT_RADIUS + hueMix * 4.8;
+        const angle = t * 0.9 + dot.seed + hueMix;
+        const x2 = x + Math.cos(angle) * length;
+        const y2 = y + Math.sin(angle) * length;
+        const paletteMix = 0.5 + 0.5 * Math.sin(t * 0.8 + dot.seed + dot.x * 0.006);
+        const r = Math.round(62 + paletteMix * 185 + hueMix * 28);
+        const g = Math.round(90 + (1 - paletteMix) * 22 + hueMix * 12);
+        const b = Math.round(220 + paletteMix * 30);
+        bgCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        bgCtx.lineWidth = 2.35;
+        bgCtx.beginPath();
+        bgCtx.moveTo(x, y);
+        bgCtx.lineTo(x2, y2);
+        bgCtx.stroke();
+      });
+
+      rafId = requestAnimationFrame(renderBackground);
+    };
+
+    resizeCanvas();
+    if (prefersReducedMotion) {
+      drawStatic();
+    } else {
+      rafId = requestAnimationFrame(renderBackground);
+    }
+
+    window.addEventListener("resize", () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      resizeCanvas();
+      if (prefersReducedMotion) {
+        drawStatic();
+      } else {
+        rafId = requestAnimationFrame(renderBackground);
+      }
+    });
+
+    window.addEventListener("mousemove", (event) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      pointer.active = true;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      pointer.active = false;
+    });
+    }
+
+    const deck = document.querySelector(".deck");
+    const topLinks = document.querySelectorAll(".top-link");
+    const hotspot = document.querySelector(".menu-hotspot");
+    const sideMenu = document.querySelector(".side-menu");
+    const menuTitle = document.getElementById("menuTitle");
+    const menuItems = document.getElementById("menuItems");
+    const slideTag = document.getElementById("slideTag");
+    const slideTitle = document.getElementById("slideTitle");
+    const slideText = document.getElementById("slideText");
+    const slideRich = document.getElementById("slideRich");
+    const prevSlideBtn = document.getElementById("prevSlideBtn");
+    const nextSlideBtn = document.getElementById("nextSlideBtn");
+    const deviceBlocker = document.getElementById("deviceBlocker");
+
+    const isUnsupportedPresentationDevice = () => {
+      const ua = navigator.userAgent || "";
+      const isMobileUA = /Android|iPhone|iPod|IEMobile|Opera Mini|Mobile/i.test(ua);
+      const isTabletUA = /iPad|Tablet|PlayBook|Silk|Kindle|Nexus 7|Nexus 10/i.test(ua);
+      const isiPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      const fallbackSmallTouch = hasCoarsePointer && window.innerWidth <= 900;
+      return isMobileUA || isTabletUA || isiPadOS || fallbackSmallTouch;
+    };
+
+    const applyDeviceBlocker = () => {
+      const blocked = isUnsupportedPresentationDevice();
+      deviceBlocker?.classList.toggle("is-visible", blocked);
+      document.body.classList.toggle("device-blocked", blocked);
+      return blocked;
+    };
+
+    applyDeviceBlocker();
+    window.addEventListener("resize", applyDeviceBlocker);
+    window.addEventListener("orientationchange", applyDeviceBlocker);
+
+    const presenterSlides = {
+      mamoune: [
+        { label: "Titre", tag: "Sujet de presentation", title: "SDN - Reseau defini par logiciel", text: "", mode: "title", inMenu: false },
+        {
+          label: "Table des matieres",
+          tag: "Sommaire",
+          title: "Table des matieres",
+          text: "",
+          mode: "toc",
+          inMenu: false,
+          tocChapters: [
+            { title: "Introduction SDN", duration: "~3 min" },
+            { title: "Architectures de reseaux SDN", duration: "~4 min" },
+            { title: "Decouplage du data-plane vs control-plane", duration: "~5 min" }
+          ]
+        },
+        {
+          label: "1-Introduction SDN",
+          tag: "Partie principale",
+          title: "Introduction au SDN",
+          text: "",
+          mode: "intro",
+          section: "introduction",
+          intro: {
+            heading: "01  Introduction au SDN",
+            definitionTitle: "Definition",
+            definitionText: "Le SDN (Software Defined Networking) est une approche qui separe le plan de controle du plan de donnees.\n\nLe reseau devient programmable, flexible et centralement gere par logiciel, contrairement aux architectures traditionnelles ou chaque equipement controle son propre trafic.",
+            whyTitle: "Pourquoi le SDN ?",
+            points: [
+              { title: "Agilite", text: "Reconfiguration rapide sans intervention physique" },
+              { title: "Centralisation", text: "Vue globale du reseau depuis un controleur unique" },
+              { title: "Automatisation", text: "Gestion et deploiement via scripts et APIs" },
+              { title: "Reduction des couts", text: "Materiel standard, logiciel ouvert" }
+            ]
+          }
+        },
+        {
+          label: "Histoire du SDN",
+          tag: "1-Introduction",
+          title: "Naissance et evolution du SDN",
+          text: "",
+          mode: "history",
+          section: "introduction",
+          submenu: true,
+          historyPoints: [
+            {
+              year: "2007",
+              tag: "Origine",
+              title: "Stanford et le projet Ethane - La naissance d une revolution",
+              desc: "Martin Casado, doctorant a Stanford, initie le projet Ethane: une architecture reseau ou le controle du trafic est centralise dans un seul programme. C est la premiere incarnation du SDN, avec la separation du control-plane et du data-plane.",
+              photo: "data:image/jpeg;base64,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",
+              facts: [
+                { icon: "🎓", title: "Stanford University", sub: "Clean Slate Program Lab" },
+                { icon: "🔬", title: "Projet Ethane", sub: "Premier prototype centralise" },
+                { icon: "🌐", title: "These de doctorat 2007", sub: "Naissance officielle du SDN" }
+              ]
+            },
+            {
+              year: "2008",
+              tag: "Protocole",
+              title: "Naissance d OpenFlow",
+              desc: "Nick McKeown publie OpenFlow: Enabling Innovation in Campus Networks. OpenFlow devient le premier protocole permettant aux controleurs de communiquer avec les switches, la premiere API southbound concrete du SDN.",
+              facts: [
+                { icon: "📡", title: "OpenFlow v0.9", sub: "Premier protocole SDN" },
+                { icon: "👤", title: "Nick McKeown", sub: "Co-inventeur d OpenFlow" },
+                { icon: "🏛️", title: "ACM SIGCOMM", sub: "Publication fondatrice" }
+              ]
+            },
+            {
+              year: "2011",
+              tag: "Standardisation",
+              title: "Creation de l ONF",
+              desc: "Google, Facebook, Microsoft, Verizon et Deutsche Telekom fondent l ONF. Le terme Software Defined Networking est officiellement popularise et OpenFlow 1.0 est ratifie comme premier standard SDN industriel.",
+              facts: [
+                { icon: "🌐", title: "ONF fondee", sub: "6 membres fondateurs" },
+                { icon: "📋", title: "OpenFlow 1.0", sub: "Standard ratifie" },
+                { icon: "💡", title: "Terme SDN", sub: "Adopte officiellement" }
+              ]
+            },
+            {
+              year: "2013",
+              tag: "Industrie",
+              title: "OpenDaylight et acceleration commerciale",
+              desc: "La Linux Foundation lance OpenDaylight, premier controleur SDN open-source industriel. Cisco, IBM et Red Hat rejoignent le mouvement. Les operateurs telecoms commencent des deploiements SDN en production reelle.",
+              facts: [
+                { icon: "🧩", title: "OpenDaylight", sub: "1er controleur open-source" },
+                { icon: "🏢", title: "+20 entreprises", sub: "Linux Foundation" },
+                { icon: "🌍", title: "Deploiements reels", sub: "AT&T, NTT, Telefonica" }
+              ]
+            },
+            {
+              year: "2015",
+              tag: "Cloud et NFV",
+              title: "Le SDN rejoint les datacenters hyperscale",
+              desc: "L ETSI standardise la NFV en complement du SDN. Google revele B4, son WAN entierement SDN gerant des flux a echelle planetaire. Le SDN devient central dans les datacenters hyperscale.",
+              facts: [
+                { icon: "☁️", title: "Google B4", sub: "SDN a echelle planetaire" },
+                { icon: "📦", title: "NFV + SDN", sub: "Convergence des paradigmes" },
+                { icon: "⚡", title: "ONOS lance", sub: "Controleur operateurs" }
+              ]
+            },
+            {
+              year: "2017",
+              tag: "Automatisation",
+              title: "SD-WAN et pilotage par API",
+              desc: "Le SD-WAN explose sur le marche entreprise. Python, Ansible et les APIs REST deviennent des standards de pilotage. NETCONF/YANG remplace progressivement SNMP pour la configuration reseau.",
+              facts: [
+                { icon: "🌐", title: "SD-WAN", sub: "Marche en forte croissance" },
+                { icon: "🐍", title: "Python + Ansible", sub: "Standards d automatisation" },
+                { icon: "📡", title: "NETCONF/YANG", sub: "Remplace SNMP" }
+              ]
+            },
+            {
+              year: "2026",
+              tag: "Aujourd hui",
+              title: "SDN au coeur des infrastructures cloud",
+              desc: "En 2026, le SDN est le standard de facto des infrastructures modernes. AWS, Azure et GCP reposent largement dessus. Le zero-touch provisioning et l IA accelerent la generation automatique de politiques reseau.",
+              facts: [
+                { icon: "🌍", title: "Marche SDN", sub: "Croissance mondiale continue" },
+                { icon: "🤖", title: "GenAI + SDN", sub: "Politiques auto-generees" },
+                { icon: "⚡", title: "Zero-Touch", sub: "Reseau sans intervention humaine" }
+              ]
+            }
+          ]
+        },
+        {
+          label: "2-Architectures de reseaux SDN",
+          tag: "Partie principale",
+          title: "Architectures de reseaux SDN",
+          text: "",
+          mode: "arch-overview",
+          section: "architecture",
+          architecture: {
+            heading: "02  Architectures de reseaux SDN",
+            context: "Vue globale des couches",
+            summaryTitle: "Modele 3 couches",
+            summaryText: "Le SDN s organise en trois couches complementaires.\nChaque couche a un role clair et communique via des APIs northbound et southbound.",
+            layers: [
+              { name: "Couche application", desc: "Applications metier et politiques reseau" },
+              { name: "Couche controle", desc: "Controleur central et logique de decision" },
+              { name: "Couche infrastructure", desc: "Switches / routeurs qui appliquent les regles" }
+            ]
+          }
+        },
+        {
+          label: "Couche application",
+          tag: "2-Architectures",
+          title: "Couche application",
+          text: "",
+          mode: "arch-layer",
+          section: "architecture",
+          submenu: true,
+          archLayer: {
+            heading: "Couche application",
+            context: "2-Architectures - Couche 1/3",
+            summaryTitle: "Role de la couche application",
+            summaryText: "Elle porte l intention metier: securite, QoS, routage intelligent, supervision.\nLes applications envoient des politiques au controleur via API northbound.",
+            points: [
+              { name: "Intentions metier", desc: "Definir ce que le reseau doit faire" },
+              { name: "Politique reseau", desc: "ACL, priorites, segmentation" },
+              { name: "Automatisation", desc: "Orchestration via APIs et scripts" }
+            ],
+            cliEnabled: false,
+            visualMode: "app-canvas",
+            appActions: {
+              "qos": "POLICY qos-voice\\npriority: EF\\nbandwidth minimum: 30%\\nstatus: pushed to controller",
+              "segmentation": "POLICY segmentation-guest\\nVLAN 30 isolated\\ninter-vlan denied except DNS",
+              "security": "POLICY zero-trust-edge\\nallow 443\\ninspect tls\\ndefault deny"
+            }
+          }
+        },
+        {
+          label: "Couche controle",
+          tag: "2-Architectures",
+          title: "Couche controle",
+          text: "",
+          mode: "arch-layer",
+          section: "architecture",
+          submenu: true,
+          archLayer: {
+            heading: "Couche controle",
+            context: "2-Architectures - Couche 2/3",
+            summaryTitle: "Role du controleur SDN",
+            summaryText: "Le controleur maintient une vue globale du reseau, traduit les intentions en regles et pilote les equipements.",
+            points: [
+              { name: "Vue globale", desc: "Topologie et etat en temps reel" },
+              { name: "Decision", desc: "Calcul de chemin et application des politiques" },
+              { name: "Programmation", desc: "Push de regles vers les switches" }
+            ],
+            cliEnabled: true,
+            cliMode: "controller-real",
+            cliTitle: "CLI - Controleur",
+            cliHint: "Essayez: show topology, show flow table 10, show hosts, ping 10.20.1.14",
+            cliPrompt: "ctrl@sdn:~$",
+            commands: {}
+          }
+        },
+        {
+          label: "Couche infrastructure",
+          tag: "2-Architectures",
+          title: "Couche infrastructure",
+          text: "",
+          mode: "arch-layer",
+          section: "architecture",
+          submenu: true,
+          archLayer: {
+            heading: "Couche infrastructure",
+            context: "2-Architectures - Couche 3/3",
+            summaryTitle: "Role de la couche infrastructure",
+            summaryText: "Elle execute les regles recues du controleur. Switches et routeurs appliquent forwarding, filtrage et QoS.",
+            points: [
+              { name: "Execution", desc: "Application locale des flow rules" },
+              { name: "Forwarding", desc: "Acheminement des paquets" },
+              { name: "Telemetrie", desc: "Remontee d etat et statistiques au controleur" }
+            ],
+            cliEnabled: true,
+            cliMode: "switch-real",
+            cliTitle: "CLI - Infrastructure",
+            cliHint: "Essayez: show mac address-table, show interfaces status, show openflow flows",
+            cliPrompt: "sw-edge-1#",
+            commands: {}
+          }
+        },
+        {
+          label: "3-Decouplage du data-plane vs control-plane",
+          tag: "Partie principale",
+          title: "Decouplage du data-plane vs control-plane",
+          text: "",
+          mode: "decoupling",
+          section: "decouplage",
+          decoupling: {
+            heading: "03  Decouplage du data-plane vs control-plane",
+            context: "Migration vers un controleur SDN central",
+            instruction: "Glissez les blocs Mngt Plan et Control Plan vers le serveur SDN.",
+            statusText: "Objectif: centraliser management + controle, garder Data Plan sur les switches.",
+            doneText: "Migration validee: decouplage SDN termine. = SDN Controller",
+            controllerLabel: "= SDN Controller",
+            switchImage: "assets/switch.png",
+            switches: [
+              { name: "Switch d acces 1", mgmt: "Mngt Plan", control: "Control Plan", data: "Data Plan" },
+              { name: "Switch d acces 2", mgmt: "Mngt Plan", control: "Control Plan", data: "Data Plan" },
+              { name: "Switch d acces 3", mgmt: "Mngt Plan", control: "Control Plan", data: "Data Plan" }
+            ]
+          }
+        },
+        {
+          label: "Recapitulatif",
+          tag: "Cloture de ma partie",
+          title: "Points a retenir",
+          text: "",
+          mode: "recap",
+          section: "recap",
+          recap: {
+            heading: "04  Recapitulatif de la partie Mamoune",
+            subtitle: "Introduction, architecture et decouplage SDN",
+            points: [
+              { title: "SDN = reseau programmable", text: "Le SDN separe le plan de controle du plan de donnees pour piloter le reseau par logiciel." },
+              { title: "Architecture en 3 couches", text: "Application, Controle, Infrastructure: chaque couche a un role clair et communique via des APIs." },
+              { title: "Centralisation du controle", text: "Le controleur obtient une vue globale pour appliquer des politiques coherentes a toute la topologie." },
+              { title: "Decouplage operationnel", text: "Management + Control migrent vers le SDN Controller; les switches conservent surtout le Data Plan." }
+            ],
+            takeaway: "Message cle: le SDN apporte agilite, automatisation et simplification de l exploitation reseau."
+          }
+        },
+        {
+          label: "Transition vers Aya",
+          tag: "Passage de parole",
+          title: "Aya continue la presentation",
+          text: "",
+          mode: "handoff-aya",
+          inMenu: false,
+          handoff: {
+            tag: "Transition",
+            heading: "Fin de ma partie",
+            message: "Merci pour votre attention. Je passe maintenant la parole a Aya, qui va continuer avec la partie suivante.",
+            buttonLabel: "Passer a Aya"
+          }
+        }
+      ],
+      aya: [
+        {
+          label: "Table des matieres",
+          tag: "Sommaire",
+          title: "Table des matieres",
+          text: "",
+          mode: "toc",
+          inMenu: false,
+          tocChapters: [
+            { title: "Couches d'abstraction (API Nord et Sud)", duration: "~2 min" },
+            { title: "Controleurs (OpenDaylight (ODL), OpenContrail)", duration: "~3 min" },
+            { title: "Acteurs SDN (Open Networking Foundation (ONF), IETF)", duration: "~2 min" }
+          ]
+        },
+        {
+          label: "Couches d'abstraction",
+          tag: "Partie principale",
+          title: "Couches d'abstraction",
+          text: "",
+          mode: "aya-abs-overview",
+          abstractionOverview: {
+            heading: "04  Couches d'abstraction SDN",
+            subtitle: "Vue globale avant le detail des APIs",
+            objective: "Objectif: visualiser la place de chaque couche avant de distinguer API Nord et API Sud.",
+            layers: [
+              { name: "Couche Application", desc: "Applications metier, orchestrateurs, services reseau." },
+              { name: "Controleur SDN", desc: "Traduit l'intention metier en politiques techniques." },
+              { name: "Couche Infrastructure", desc: "Switches/routeurs qui appliquent les regles dans le data-plane." }
+            ]
+          }
+        },
+        {
+          label: "API Nord",
+          tag: "Partie principale",
+          title: "API Nord (Northbound)",
+          text: "",
+          mode: "aya-api-focus",
+          submenu: true,
+          apiFocus: {
+            kind: "north",
+            heading: "API Nord (Northbound)",
+            subtitle: "Application -> Controleur",
+            objective: "But: exprimer une intention metier sans entrer dans les commandes equipement.",
+            examples: "Exemples: REST, RESTCONF, Intent API",
+            asks: "Question type: Que veut-on faire ?",
+            scenario: [
+              "Une app demande: prioriser la voix.",
+              "Le controleur recoit une politique metier, pas une commande switch.",
+              "Le controleur decide ensuite comment l'appliquer au reseau."
+            ]
+          }
+        },
+        {
+          label: "API Sud",
+          tag: "Partie principale",
+          title: "API Sud (Southbound)",
+          text: "",
+          mode: "aya-api-focus",
+          submenu: true,
+          apiFocus: {
+            kind: "south",
+            heading: "API Sud (Southbound)",
+            subtitle: "Controleur -> Infrastructure",
+            objective: "But: programmer les equipements pour executer les politiques decidees par le controleur.",
+            examples: "Exemples: OpenFlow, NETCONF, OVSDB, gRPC",
+            asks: "Question type: Comment l'appliquer ?",
+            scenario: [
+              "Le controleur calcule les regles de flux.",
+              "Les switches recoivent des instructions techniques precises.",
+              "Le data-plane applique les regles en temps reel."
+            ]
+          }
+        },
+        {
+          label: "API en action (ChatGPT)",
+          tag: "Partie principale",
+          title: "Comment fonctionne une API ?",
+          text: "",
+          mode: "aya-api-scene",
+          submenu: true,
+          apiScene: {
+            heading: "06  API en action : User -> API -> Server",
+            subtitle: "Exemple concret avec ChatGPT",
+            userLabel: "User",
+            apiLabel: "API",
+            serverLabel: "Server",
+            userHint: "Vous ecrivez une demande",
+            apiHint: "L'API transporte et structure la requete",
+            serverHint: "Le serveur traite et renvoie la reponse",
+            placeholder: "Ex: Explique moi ce qu'est une API en une phrase",
+            sendLabel: "Send",
+            idleText: "Tapez un message puis cliquez sur Send pour voir le trajet complet.",
+            step1: "1) Le message part du User vers l'API.",
+            step2: "2) L'API envoie la requete au Server.",
+            step3: "3) Le Server traite la demande...",
+            step4: "4) Le Server retourne la reponse a l'API.",
+            step5: "5) L'API livre la reponse au User.",
+            done: "Flux termine: vous venez de voir le role exact de l'API."
+          }
+        },
+        {
+          label: "Controleurs",
+          tag: "Partie principale",
+          title: "Controleurs SDN",
+          text: "",
+          mode: "aya-controllers",
+          controllers: {
+            heading: "05  Les Controleurs SDN",
+            leftTitle: "OpenDaylight (ODL)",
+            leftSub: "Linux Foundation",
+            leftPoints: [
+              "Architecture modulaire basee sur OSGi",
+              "Support multi-protocoles (OpenFlow, NETCONF, BGP)",
+              "Interface REST pour applications northbound",
+              "Utilise en production par des operateurs telecoms"
+            ],
+            rightTitle: "OpenContrail",
+            rightSub: "Juniper / Linux Foundation (maintenant TF)",
+            rightPoints: [
+              "Concu pour les clouds et datacenters",
+              "Integration native avec OpenStack",
+              "Support BGP/MPLS et EVPN",
+              "Analytique reseau integree"
+            ],
+            note: "Role commun : centraliser l'intelligence reseau, traduire les politiques en regles de flux pour les equipements.",
+            footerLeft: "SDN - Reseaux Pilotes par Logiciel",
+            footerRight: "05"
+          }
+        },
+        {
+          label: "Acteurs SDN",
+          tag: "Partie principale",
+          title: "Acteurs SDN",
+          text: "",
+          mode: "aya-actors",
+          actors: {
+            heading: "06  Acteurs et Organismes SDN",
+            blocks: [
+              {
+                title: "ONF - Open Networking Foundation",
+                subtitle: "Promoteur principal du SDN",
+                text: "Cree en 2011. Developpe les standards OpenFlow. Membres : Google, AT&T, Deutsche Telekom, NTT. Definit les principes et certifications SDN."
+              },
+              {
+                title: "IETF - Internet Engineering Task Force",
+                subtitle: "Standardisation des protocoles",
+                text: "Travaille sur NETCONF/YANG, BGP-LS, PCE, MPLS-TP. Complementaire a l'ONF pour les protocoles interoperables."
+              }
+            ],
+            extrasLabel: "Autres acteurs industriels :",
+            extras: ["Cisco (ACI)", "VMware (NSX)", "Google (B4 WAN)", "Microsoft Azure", "Linux Foundation"],
+            footerLeft: "SDN - Reseaux Pilotes par Logiciel",
+            footerRight: "06"
+          }
+        },
+        {
+          label: "Recapitulatif",
+          tag: "Cloture de ma partie",
+          title: "Points a retenir",
+          text: "",
+          mode: "recap",
+          inMenu: false,
+          recap: {
+            heading: "07  Recapitulatif de la partie Aya",
+            subtitle: "Abstraction, controleurs et acteurs SDN",
+            points: [
+              { title: "API Nord vs API Sud", text: "API Nord exprime l'intention metier; API Sud applique les regles techniques sur les equipements." },
+              { title: "Controleurs SDN", text: "OpenDaylight et OpenContrail centralisent la logique reseau pour une gestion coherente et programmable." },
+              { title: "Acteurs de reference", text: "ONF pilote la vision SDN et OpenFlow; IETF standardise les protocoles inter-operables (NETCONF, YANG, etc.)." },
+              { title: "Valeur pratique", text: "Le SDN rend le reseau plus agile, automatisable et evolutif pour les environnements cloud et datacenter." }
+            ],
+            takeaway: "Message cle: comprendre les couches et les acteurs SDN permet de concevoir des reseaux modernes, ouverts et pilotables."
+          }
+        },
+        {
+          label: "Transition",
+          tag: "Transition",
+          title: "Passage de parole",
+          text: "",
+          mode: "handoff-abdellah",
+          inMenu: false,
+          handoff: {
+            tag: "Transition",
+            heading: "Fin de ma partie",
+            message: "Merci pour votre attention. Je passe maintenant la parole a Abdellah, qui va continuer avec la partie suivante.",
+            buttonLabel: "Passer a Abdellah",
+            targetPresenter: "abdellah"
+          }
+        }
+      ],
+      abdellah: [
+        {
+          label: "Table des matieres",
+          tag: "Sommaire",
+          title: "Table des matieres",
+          text: "",
+          mode: "toc",
+          inMenu: false,
+          tocChapters: [
+            { title: "Coexistence de reseaux virtualises et traditionnels", duration: "~3 min" },
+            { title: "Migration vers les reseaux pilotes par le logiciel", duration: "~3 min" },
+            { title: "Automatisation (Ansible, Python, OVSDB, API REST, NetConf)", duration: "~3 min" }
+          ]
+        },
+        {
+          label: "Coexistence SDN",
+          tag: "Partie principale",
+          title: "Coexistence : SDN & Reseaux Traditionnels",
+          text: "",
+          mode: "abd-coexistence",
+          coexistence: {
+            heading: "07  Coexistence : SDN & Reseaux Traditionnels",
+            subtitle: "Passage progressif sans rupture de service",
+            challengesTitle: "Defis de coexistence",
+            strategiesTitle: "Strategies de transition",
+            challenges: [
+              "Interoperabilite entre equipements SDN et legacy",
+              "Gestion de tables de routage hybrides",
+              "Synchronisation des politiques reseau",
+              "Formats de configuration differents",
+              "Support partiel d'OpenFlow sur anciens switchs"
+            ],
+            strategies: [
+              { title: "Overlay SDN", text: "SDN par-dessus reseau physique existant (tunnels VXLAN)." },
+              { title: "Hybride", text: "Equipements supportant les deux modes simultanement." },
+              { title: "Underlay progressif", text: "Remplacement graduel des equipements par des whitebox SDN." },
+              { title: "Virtualisation", text: "NFV pour simuler des fonctions reseau sur serveurs standards." }
+            ]
+          }
+        },
+        {
+          label: "Migration SDN",
+          tag: "Partie principale",
+          title: "Migration vers les Reseaux Pilotes par Logiciel",
+          text: "",
+          mode: "abd-migration",
+          migration: {
+            heading: "08  Migration vers les Reseaux Pilotes par Logiciel",
+            steps: [
+              {
+                title: "Audit & Planification",
+                text: "Inventaire de l'infrastructure, definition des objectifs et KPIs, choix du controleur SDN."
+              },
+              {
+                title: "Pilote (PoC)",
+                text: "Deploiement sur un segment isole, tests de performance et interoperabilite, validation du modele."
+              },
+              {
+                title: "Migration Progressive",
+                text: "Integration site par site, maintien de la coexistence SDN/legacy, formation des equipes."
+              },
+              {
+                title: "Optimisation",
+                text: "Automatisation des processus, integration CI/CD reseau, monitoring et analytics avances."
+              }
+            ],
+            note: "Bonnes pratiques : documenter chaque etape, automatiser les tests, impliquer les equipes Ops des le debut.",
+            footerLeft: "SDN - Reseaux Pilotes par Logiciel",
+            footerRight: "08"
+          }
+        },
+        {
+          label: "Automatisation",
+          tag: "Partie principale",
+          title: "Automatisation Reseau",
+          text: "",
+          mode: "abd-automation",
+          automation: {
+            heading: "09  Automatisation Reseau",
+            cards: [
+              {
+                key: "ansible",
+                title: "Ansible",
+                kind: "Orchestration",
+                text: "Automatisation des configurations reseau via des playbooks YAML. Modules specialises pour switches et routeurs (ios_config, nxos_config).",
+                span: 2
+              },
+              {
+                key: "python",
+                title: "Python + REST API",
+                kind: "Scripting",
+                text: "Librairies requests/ncclient pour interagir avec les APIs REST des controleurs SDN. Ideal pour l'automatisation sur mesure.",
+                span: 2
+              },
+              {
+                key: "ovsdb",
+                title: "OVSDB",
+                kind: "Base de donnees",
+                text: "Open vSwitch Database. Protocole de gestion des virtual switches (OvS). Utilise pour configurer les tunnels VXLAN, GRE, VLANs.",
+                span: 2
+              },
+              {
+                key: "netconf",
+                title: "NETCONF / YANG",
+                kind: "Protocole",
+                text: "Protocole standard IETF (RFC 6241) pour la gestion reseau. YANG modelise les donnees. Remplace SNMP dans les architectures modernes.",
+                span: 3
+              },
+              {
+                key: "rest",
+                title: "REST API",
+                kind: "Interface",
+                text: "API HTTP exposees par les controleurs SDN. Format JSON/XML. Permet integrations avec des outils DevOps (Jenkins, Terraform, etc.).",
+                span: 3
+              }
+            ],
+            note: "Vision pratique: Ansible orchestre, Python personnalise, NETCONF/YANG et OVSDB standardisent l'automatisation terrain.",
+            footerLeft: "SDN - Reseaux Pilotes par Logiciel",
+            footerRight: "09"
+          }
+        },
+        { label: "Resultats", tag: "Profil du presentateur", title: "Abdellah", text: "Presente les resultats finaux et les indicateurs mesurables.", inMenu: false },
+        { label: "Conclusion", tag: "Profil du presentateur", title: "Abdellah", text: "Resumme la conclusion et renforce les points principaux.", inMenu: false },
+        {
+          label: "Conclusion finale",
+          tag: "Cloture",
+          title: "Conclusion & Perspectives",
+          text: "",
+          mode: "abd-final",
+          final: {
+            number: "10",
+            heading: "Conclusion &",
+            headingAccent: "Perspectives",
+            bullets: [
+              "SDN revolutionne la gestion reseau par la programmabilite.",
+              "Le decouplage Control/Data-Plane simplifie l'architecture.",
+              "ODL, OpenContrail : des controleurs ouverts et matures.",
+              "Automatisation via Ansible, Python, NETCONF/REST API.",
+              "La migration est progressive et necessite une strategie claire."
+            ],
+            trendsTitle: "Tendances",
+            trends: [
+              "Intent-Based Networking",
+              "SD-WAN",
+              "5G & NFV",
+              "AIOps Reseau",
+              "Zero-Touch Provisioning"
+            ],
+            footer: "Merci pour votre attention  •  SDN - Reseaux Pilotes par Logiciel"
+          }
+        }
+      ]
+    };
+
+    let activePresenter = null;
+    let activeSlideIndex = 0;
+
+    const showMenu = () => {
+      clearTimeout(window.hideTimer);
+      sideMenu.classList.add("is-visible");
+    };
+
+    const hideMenu = () => {
+      clearTimeout(window.hideTimer);
+      window.hideTimer = setTimeout(() => {
+        sideMenu.classList.remove("is-visible");
+      }, 120);
+    };
+
+    const bindArchCli = (root, cfg) => {
+      if (!root || !cfg) return;
+      const body = root.querySelector(".archx-cli-body");
+      const input = root.querySelector(".archx-cli-field");
+      const run = root.querySelector(".archx-cli-run");
+      const prompt = cfg.cliPrompt || "sdn@node:~$";
+      const cmdMap = cfg.commands || {};
+
+      const append = (cmd, output) => {
+        if (!body) return;
+        const line = document.createElement("div");
+        line.className = "archx-cli-line";
+        line.textContent = `${prompt} ${cmd}`;
+        body.appendChild(line);
+
+        if (output && output !== "__CLEAR__") {
+          const out = document.createElement("pre");
+          out.className = "archx-cli-output";
+          out.textContent = output;
+          body.appendChild(out);
+        }
+        body.scrollTop = body.scrollHeight;
+      };
+
+      const execute = () => {
+        if (!input || !body) return;
+        const cmd = input.value.trim();
+        if (!cmd) return;
+        const key = cmd.toLowerCase();
+        let result = cmdMap[key];
+
+        if (!result && cfg.cliMode === "controller-real") {
+          if (key === "help") {
+            result = "Commandes: show topology, show hosts, show flow table <id>, show statistics, ping <ip>, clear";
+          } else if (key === "show topology") {
+            result = "core-1 -- agg-1 -- access-3\n   |        |\n  fw-1    access-4";
+          } else if (key === "show hosts") {
+            result = "10.20.1.14 00:1a:2b:3c:4d:14 sw-access3/7\n10.20.1.22 00:1a:2b:3c:4d:22 sw-access4/3";
+          } else if (key === "show statistics") {
+            result = "active_flows: 126\nswitches_connected: 14\ncontroller_cpu: 39%\npolicy_push_latency: 28ms";
+          } else if (/^show flow table\s+\d+$/i.test(key)) {
+            const tid = key.split(/\s+/).pop();
+            result = `table=${tid},priority=200,ip,nw_dst=10.30.0.0/16 actions=output:2\n` +
+              `table=${tid},priority=100,tcp,tp_dst=443 actions=output:5`;
+          } else if (/^ping\s+\d{1,3}(\.\d{1,3}){3}$/i.test(key)) {
+            const ip = key.split(/\s+/).pop();
+            result = `PING ${ip} ...\n64 bytes from ${ip}: icmp_seq=1 ttl=62 time=4ms\n64 bytes from ${ip}: icmp_seq=2 ttl=62 time=3ms`;
+          }
+        }
+
+        if (!result && cfg.cliMode === "switch-real") {
+          if (key === "help") {
+            result = "Commandes: show mac address-table, show interfaces status, show openflow flows, show ip arp, clear";
+          } else if (key === "show mac address-table") {
+            result = "Vlan  Mac Address       Type      Ports\n10    001a.2b3c.4d01   DYNAMIC   Gi1/0/3\n10    001a.2b3c.4d02   DYNAMIC   Gi1/0/7";
+          } else if (key === "show interfaces status") {
+            result = "Port    Name        Status   Vlan  Duplex Speed\nGi1/0/1 uplink-core connected trunk full   1G\nGi1/0/7 host-22     connected 10    full   1G";
+          } else if (key === "show openflow flows") {
+            result = "cookie=0x0, table=0, priority=200,ip,nw_dst=10.30.2.14 actions=output:5\ncookie=0x0, table=0, priority=180,tcp,tp_dst=443 actions=output:2";
+          } else if (key === "show ip arp") {
+            result = "Protocol  Address      Age  Mac Address       Interface\nInternet  10.20.1.14   12   001a.2b3c.4d14   Vlan10";
+          }
+        }
+
+        if (result === "__CLEAR__") {
+          body.innerHTML = "";
+          input.value = "";
+          return;
+        }
+        append(cmd, result || `Commande inconnue: ${cmd}\nTapez 'help'`);
+        input.value = "";
+      };
+
+      if (body && cfg.cliHint) {
+        const hint = document.createElement("div");
+        hint.className = "archx-cli-output";
+        hint.textContent = cfg.cliHint;
+        body.appendChild(hint);
+      }
+
+        run?.addEventListener("click", execute);
+        input?.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") execute();
+        });
+      };
+
+    const bindArchAppCanvas = (root, cfg) => {
+      if (!root || !cfg) return;
+      const out = root.querySelector(".archx-app-out");
+      const btns = root.querySelectorAll(".archx-app-btn");
+      const actions = cfg.appActions || {};
+      const fallback = "Selectionnez une politique pour voir la traduction en intention reseau.";
+      if (out) out.textContent = fallback;
+
+      btns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-action");
+          if (!out) return;
+          out.textContent = actions[key] || fallback;
+        });
+      });
+    };
+
+    const bindDecouplingBoard = (root, cfg) => {
+      if (!root || !cfg) return;
+      const dropzone = root.querySelector(".decx-dropzone");
+      const statusNode = root.querySelector(".decx-status");
+      const doneNode = root.querySelector(".decx-done");
+      const stackNode = root.querySelector(".decx-central-stack");
+      const hintNode = root.querySelector(".decx-drop-hint");
+      const chips = root.querySelectorAll(".decx-chip[draggable='true']");
+      const total = chips.length;
+      let moved = 0;
+
+      root.querySelectorAll(".decx-safe-img").forEach((img) => {
+        img.addEventListener("error", () => {
+          img.style.display = "none";
+        });
+      });
+
+      if (statusNode) {
+        statusNode.textContent = `${moved}/${total} plans migres vers le controleur SDN`;
+      }
+
+      const finalize = () => {
+        if (moved !== total) return;
+        if (doneNode) doneNode.classList.add("is-visible");
+        if (hintNode) {
+          hintNode.textContent = cfg.doneText || "Migration validee.";
+        }
+      };
+
+      const moveChip = (chip) => {
+        if (!chip || chip.classList.contains("is-placed")) return;
+        chip.classList.remove("is-dragging");
+        chip.classList.add("is-placed");
+        chip.setAttribute("draggable", "false");
+
+        if (stackNode) {
+          const centralizedChip = document.createElement("span");
+          const plane = chip.getAttribute("data-plane") || "";
+          centralizedChip.className = `decx-central-chip ${plane === "mgmt" ? "mgmt" : "ctrl"}`;
+          centralizedChip.textContent = chip.textContent || "";
+          stackNode.appendChild(centralizedChip);
+        }
+
+        moved += 1;
+        if (statusNode && moved < total) {
+          statusNode.textContent = `${moved}/${total} plans migres vers le controleur SDN`;
+        }
+        finalize();
+      };
+
+      chips.forEach((chip, index) => {
+        chip.setAttribute("data-chip-id", `decx-chip-${index + 1}`);
+
+        chip.addEventListener("dragstart", (event) => {
+          if (chip.classList.contains("is-placed")) {
+            event.preventDefault();
+            return;
+          }
+          chip.classList.add("is-dragging");
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", chip.getAttribute("data-chip-id") || "");
+        });
+
+        chip.addEventListener("dragend", () => {
+          chip.classList.remove("is-dragging");
+        });
+
+        chip.addEventListener("dblclick", () => {
+          moveChip(chip);
+        });
+      });
+
+      if (!dropzone) return;
+
+      dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropzone.classList.add("is-over");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("is-over");
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("is-over");
+        const id = event.dataTransfer.getData("text/plain");
+        if (!id) return;
+        const chip = root.querySelector(`.decx-chip[data-chip-id="${id}"]`);
+        moveChip(chip);
+      });
+    };
+
+    const bindAyaApiScene = (root, cfg) => {
+      if (!root || !cfg) return;
+      const stage = root.querySelector(".apix-stage");
+      const packet = root.querySelector(".apix-packet");
+      const stepNode = root.querySelector(".apix-step");
+      const logNode = root.querySelector(".apix-chatlog");
+      const input = root.querySelector(".apix-input");
+      const send = root.querySelector(".apix-send");
+      const nodes = {
+        user: root.querySelector('[data-node="user"]'),
+        api: root.querySelector('[data-node="api"]'),
+        server: root.querySelector('[data-node="server"]')
+      };
+
+      if (!stage || !packet || !stepNode || !logNode || !input || !send || !nodes.user || !nodes.api || !nodes.server) return;
+
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+      const setStep = (text) => {
+        stepNode.textContent = text || "";
+      };
+
+      const clearHighlights = () => {
+        Object.values(nodes).forEach((node) => {
+          node.classList.remove("is-active", "is-processing");
+        });
+      };
+
+      const highlight = (key, processing = false) => {
+        clearHighlights();
+        const target = nodes[key];
+        if (!target) return;
+        target.classList.add("is-active");
+        if (processing) target.classList.add("is-processing");
+      };
+
+      const addBubble = (role, text) => {
+        const bubble = document.createElement("div");
+        bubble.className = `apix-bubble ${role}`;
+        bubble.textContent = text;
+        logNode.appendChild(bubble);
+        logNode.scrollTop = logNode.scrollHeight;
+      };
+
+      const getPoint = (key) => {
+        const node = nodes[key];
+        const stageRect = stage.getBoundingClientRect();
+        const rect = node.getBoundingClientRect();
+        return {
+          x: rect.left - stageRect.left + rect.width / 2,
+          y: rect.top - stageRect.top + rect.height / 2
+        };
+      };
+
+      const movePacket = async (fromKey, toKey, text, asResponse = false) => {
+        const from = getPoint(fromKey);
+        const to = getPoint(toKey);
+        packet.textContent = text;
+        packet.classList.toggle("is-response", asResponse);
+        packet.style.left = `${from.x}px`;
+        packet.style.top = `${from.y}px`;
+        packet.classList.add("is-visible");
+        await nextFrame();
+        packet.style.left = `${to.x}px`;
+        packet.style.top = `${to.y}px`;
+        await wait(1220);
+      };
+
+      // Simple simulated "ChatGPT-like" reply so the slide works offline.
+      const buildReply = (prompt) => {
+        if (/api/i.test(prompt)) {
+          return "Une API est une passerelle: elle prend votre demande, la transmet au serveur, puis vous renvoie la reponse.";
+        }
+        return `Reponse simulee: j'ai recu "${prompt.slice(0, 64)}" et l'API m'a renvoye le resultat du serveur.`;
+      };
+
+      const runFlow = async () => {
+        const message = input.value.trim();
+        if (!message || send.disabled) return;
+        send.disabled = true;
+        input.disabled = true;
+        addBubble("user", message);
+
+        highlight("user");
+        setStep(cfg.step1 || "Le message part du User vers l'API.");
+        await movePacket("user", "api", `Req: ${message.slice(0, 28)}${message.length > 28 ? "..." : ""}`, false);
+
+        highlight("api");
+        setStep(cfg.step2 || "L'API envoie la requete au Server.");
+        await movePacket("api", "server", "Forwarding...", false);
+
+        highlight("server", true);
+        setStep(cfg.step3 || "Le Server traite la demande...");
+        await wait(1300);
+
+        const reply = buildReply(message);
+
+        highlight("server");
+        setStep(cfg.step4 || "Le Server retourne la reponse a l'API.");
+        await movePacket("server", "api", "Response payload", true);
+
+        highlight("api");
+        setStep(cfg.step5 || "L'API livre la reponse au User.");
+        await movePacket("api", "user", "Reply to user", true);
+
+        addBubble("bot", reply);
+        setStep(cfg.done || "Flux termine.");
+        packet.classList.remove("is-visible");
+        clearHighlights();
+        input.value = "";
+        input.disabled = false;
+        send.disabled = false;
+        input.focus();
+      };
+
+      setStep(cfg.idleText || "Tapez un message puis cliquez sur Send.");
+
+      send.addEventListener("click", runFlow);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") runFlow();
+      });
+    };
+
+    const renderSlide = (presenterKey, slideIndex) => {
+      const slides = presenterSlides[presenterKey];
+      const slide = slides[slideIndex];
+      activeSlideIndex = slideIndex;
+      slideTag.hidden = false;
+      slideTitle.hidden = false;
+      slideText.hidden = false;
+      slideRich.hidden = true;
+      slideTag.textContent = slide.tag || "Profil du presentateur";
+      slideTitle.textContent = slide.title;
+      slideText.textContent = slide.text;
+      deck.classList.add("has-content");
+      deck.classList.remove("intro-slide", "title-slide", "toc-slide", "history-slide", "arch-slide", "decouple-slide", "recap-slide", "handoff-slide", "aya-abstraction-slide", "aya-coex-slide", "aya-api-scene-slide", "aya-controllers-slide", "aya-actors-slide", "abd-migration-slide", "abd-automation-slide", "abd-final-slide");
+      deck.classList.toggle("intro-slide", presenterKey === "mamoune" && slide.mode === "intro");
+      deck.classList.toggle("title-slide", presenterKey === "mamoune" && slide.mode === "title");
+      deck.classList.toggle("toc-slide", slide.mode === "toc");
+      deck.classList.toggle("history-slide", presenterKey === "mamoune" && slide.mode === "history");
+      deck.classList.toggle("arch-slide", presenterKey === "mamoune" && (slide.mode === "arch-overview" || slide.mode === "arch-layer"));
+      deck.classList.toggle("decouple-slide", presenterKey === "mamoune" && slide.mode === "decoupling");
+      deck.classList.toggle("recap-slide", (presenterKey === "mamoune" && slide.mode === "recap") || (presenterKey === "aya" && slide.mode === "recap"));
+      deck.classList.toggle("handoff-slide", (presenterKey === "mamoune" && slide.mode === "handoff-aya") || (presenterKey === "aya" && slide.mode === "handoff-abdellah"));
+      deck.classList.toggle("aya-abstraction-slide", presenterKey === "aya" && (slide.mode === "aya-abs-overview" || slide.mode === "aya-api-focus"));
+      deck.classList.toggle("aya-coex-slide", (presenterKey === "aya" && slide.mode === "aya-coexistence") || (presenterKey === "abdellah" && slide.mode === "abd-coexistence"));
+      deck.classList.toggle("aya-api-scene-slide", presenterKey === "aya" && slide.mode === "aya-api-scene");
+      deck.classList.toggle("aya-controllers-slide", presenterKey === "aya" && slide.mode === "aya-controllers");
+      deck.classList.toggle("aya-actors-slide", presenterKey === "aya" && slide.mode === "aya-actors");
+      deck.classList.toggle("abd-migration-slide", presenterKey === "abdellah" && slide.mode === "abd-migration");
+      deck.classList.toggle("abd-automation-slide", presenterKey === "abdellah" && slide.mode === "abd-automation");
+      deck.classList.toggle("abd-final-slide", presenterKey === "abdellah" && slide.mode === "abd-final");
+
+      if (presenterKey === "mamoune" && slide.mode === "intro") {
+        const intro = slide.intro || {};
+        const points = intro.points || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="introx-shell">
+            <div class="introx-header">${intro.heading || "01  Introduction au SDN"}</div>
+            <div class="introx-body">
+              <section class="introx-left">
+                <h3>${intro.definitionTitle || "Definition"}</h3>
+                <p>${intro.definitionText || ""}</p>
+              </section>
+              <section class="introx-right">
+                <h3>${intro.whyTitle || "Pourquoi le SDN ?"}</h3>
+                <div class="introx-list">
+                  ${points.map((item) => `
+                    <article class="introx-item">
+                      <strong>${item.title}</strong>
+                      <span>${item.text}</span>
+                    </article>
+                  `).join("")}
+                </div>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      if (slide.mode === "toc") {
+        const chapters = slide.tocChapters || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="tocx-block">
+            <div class="tocx-label">Sommaire</div>
+            <div class="tocx-count">${chapters.length} chapitres</div>
+            <div class="tocx-title">Table des matieres</div>
+            <div class="tocx-list">
+              ${chapters.map((chapter, index) => `
+                <div class="tocx-item ${index === 0 ? "active" : ""}" data-index="${index}">
+                  <div class="tocx-badge">${index + 1}</div>
+                  <div class="tocx-text">
+                    <div class="tocx-chapter-title">${chapter.title}</div>
+                    <div class="tocx-bar"><div class="tocx-bar-fill" style="width:${index === 0 ? 100 : 0}%"></div></div>
+                  </div>
+                  <div class="tocx-meta">${chapter.duration || "~3 min"}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+
+        slideRich.querySelectorAll(".tocx-item").forEach((item, index, all) => {
+          item.addEventListener("click", () => {
+            all.forEach((node, i) => {
+              node.classList.toggle("active", node === item);
+              const fill = node.querySelector(".tocx-bar-fill");
+              if (fill) fill.style.width = i <= index ? "100%" : "0%";
+            });
+          });
+        });
+      }
+
+      if (presenterKey === "aya" && slide.mode === "aya-abs-overview") {
+        const cfg = slide.abstractionOverview || {};
+        const layers = cfg.layers || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="ayax-shell">
+            <div class="ayax-head">
+              <h2>${cfg.heading || "Couches d'abstraction SDN"}</h2>
+              <p>${cfg.subtitle || "Vue globale"}</p>
+            </div>
+            <p class="ayax-objective">${cfg.objective || ""}</p>
+            <div class="ayax-overview-stack">
+              <article class="ayax-overview-layer app">
+                <strong>${layers[0]?.name || "Couche Application"}</strong>
+                <span>${layers[0]?.desc || ""}</span>
+              </article>
+              <div class="ayax-overview-link"><strong>API Nord:</strong> Application -> Controleur (intentions metier)</div>
+              <article class="ayax-overview-layer ctrl">
+                <strong>${layers[1]?.name || "Controleur SDN"}</strong>
+                <span>${layers[1]?.desc || ""}</span>
+              </article>
+              <div class="ayax-overview-link"><strong>API Sud:</strong> Controleur -> Infrastructure (regles techniques)</div>
+              <article class="ayax-overview-layer infra">
+                <strong>${layers[2]?.name || "Couche Infrastructure"}</strong>
+                <span>${layers[2]?.desc || ""}</span>
+              </article>
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "aya" && slide.mode === "aya-api-focus") {
+        const cfg = slide.apiFocus || {};
+        const steps = cfg.scenario || [];
+        const isNorth = cfg.kind === "north";
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="ayaf-shell">
+            <div class="ayaf-head">
+              <h2>${cfg.heading || "API Focus"}</h2>
+              <p>${cfg.subtitle || ""}</p>
+            </div>
+            <p class="ayaf-objective">${cfg.objective || ""}</p>
+            <div class="ayaf-core">
+              <article class="ayaf-card">
+                <h3>Role principal</h3>
+                <p>${isNorth ? "Interfacer les applications avec le controleur via une abstraction haute." : "Interfacer le controleur avec les equipements reseau de terrain."}</p>
+                <p>${cfg.examples || ""}</p>
+                <p class="ask">${cfg.asks || ""}</p>
+              </article>
+              <article class="ayaf-card">
+                <h3>Ce que l'etudiant doit retenir</h3>
+                <p>${isNorth ? "API Nord parle le langage metier (intentions, politiques)." : "API Sud parle le langage technique (flow rules, config equipements)."}</p>
+                <p>${isNorth ? "On specifie le 'quoi' sans imposer le 'comment'." : "On applique le 'comment' decide par le controleur."}</p>
+              </article>
+            </div>
+            <div class="ayaf-steps">
+              ${steps.map((s, i) => `
+                <article class="ayaf-step">
+                  <b>Etape ${i + 1}</b>
+                  <p>${s}</p>
+                </article>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      if ((presenterKey === "aya" && slide.mode === "aya-coexistence") || (presenterKey === "abdellah" && slide.mode === "abd-coexistence")) {
+        const cfg = slide.coexistence || {};
+        const challenges = cfg.challenges || [];
+        const strategies = cfg.strategies || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="aycx-shell">
+            <div class="aycx-head">
+              <h2>${cfg.heading || "Coexistence SDN & Reseaux Traditionnels"}</h2>
+              <p>${cfg.subtitle || ""}</p>
+            </div>
+            <div class="aycx-body">
+              <section class="aycx-col">
+                <h3>${cfg.challengesTitle || "Defis"}</h3>
+                ${challenges.map((item) => `
+                  <article class="aycx-item challenge">
+                    <strong>Defi</strong>
+                    <span>${item}</span>
+                  </article>
+                `).join("")}
+              </section>
+              <section class="aycx-col">
+                <h3>${cfg.strategiesTitle || "Strategies"}</h3>
+                ${strategies.map((item) => `
+                  <article class="aycx-item strategy">
+                    <strong>${item.title || "Strategie"}</strong>
+                    <span>${item.text || ""}</span>
+                  </article>
+                `).join("")}
+              </section>
+              ${cfg.note ? `<div class="aycx-note"><strong>Conclusion:</strong> ${cfg.note}</div>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "abdellah" && slide.mode === "abd-migration") {
+        const cfg = slide.migration || {};
+        const steps = cfg.steps || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="abdm-shell">
+            <div class="abdm-head">
+              <h2>${cfg.heading || "08  Migration vers les Reseaux Pilotes par Logiciel"}</h2>
+            </div>
+            <div class="abdm-body">
+              <div class="abdm-track">
+                ${steps.map((item, index) => `
+                  <article class="abdm-card">
+                    <div class="abdm-step">${index + 1}</div>
+                    <h3>${item.title || ""}</h3>
+                    <p>${item.text || ""}</p>
+                  </article>
+                `).join("")}
+              </div>
+              <p class="abdm-note">${cfg.note || ""}</p>
+            </div>
+            <div class="abdm-footer">
+              <span>${cfg.footerLeft || ""}</span>
+              <span>${cfg.footerRight || ""}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "abdellah" && slide.mode === "abd-automation") {
+        const cfg = slide.automation || {};
+        const cards = cfg.cards || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="abda-shell">
+            <div class="abda-head">
+              <h2>${cfg.heading || "09  Automatisation Reseau"}</h2>
+            </div>
+            <div class="abda-body">
+              <div class="abda-grid">
+                ${cards.map((card) => `
+                  <article class="abda-card span-${card.span || 2} ${card.key || ""}">
+                    <h3>${card.title || ""}</h3>
+                    <p class="kind">${card.kind || ""}</p>
+                    <p>${card.text || ""}</p>
+                  </article>
+                `).join("")}
+              </div>
+              <p class="abda-note">${cfg.note || ""}</p>
+            </div>
+            <div class="abda-footer">
+              <span>${cfg.footerLeft || ""}</span>
+              <span>${cfg.footerRight || ""}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "abdellah" && slide.mode === "abd-final") {
+        const cfg = slide.final || {};
+        const bullets = cfg.bullets || [];
+        const trends = cfg.trends || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="abdf-shell">
+            <section class="abdf-main">
+              <div class="abdf-head">
+                <p class="num">${cfg.number || "10"}</p>
+                <h2>${cfg.heading || "Conclusion &"} <span>${cfg.headingAccent || "Perspectives"}</span></h2>
+              </div>
+              <ul class="abdf-list">
+                ${bullets.map((item) => `<li>${item}</li>`).join("")}
+              </ul>
+            </section>
+            <aside class="abdf-side">
+              <h3>${cfg.trendsTitle || "Tendances"}</h3>
+              <div class="abdf-bubbles">
+                ${trends.map((item, index) => `<div class="abdf-bubble${index === trends.length - 1 && trends.length % 2 === 1 ? " single" : ""}">${item}</div>`).join("")}
+              </div>
+            </aside>
+            <div class="abdf-footer">${cfg.footer || ""}</div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "aya" && slide.mode === "aya-api-scene") {
+        const cfg = slide.apiScene || {};
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="apix-shell">
+            <div class="apix-head">
+              <h2>${cfg.heading || "API en action"}</h2>
+              <p>${cfg.subtitle || ""}</p>
+            </div>
+
+            <div class="apix-stage">
+              <div class="apix-nodes">
+                <article class="apix-node" data-node="user">
+                  <div class="apix-node-icon">🙋</div>
+                  <h3>${cfg.userLabel || "User"}</h3>
+                  <p>${cfg.userHint || ""}</p>
+                </article>
+                <article class="apix-node" data-node="api">
+                  <div class="apix-node-icon">🧩</div>
+                  <h3>${cfg.apiLabel || "API"}</h3>
+                  <p>${cfg.apiHint || ""}</p>
+                </article>
+                <article class="apix-node" data-node="server">
+                  <div class="apix-node-icon">🖥️</div>
+                  <h3>${cfg.serverLabel || "Server"}</h3>
+                  <p>${cfg.serverHint || ""}</p>
+                </article>
+              </div>
+
+              <div class="apix-packet">Message</div>
+              <p class="apix-step"></p>
+              <div class="apix-chatlog"></div>
+            </div>
+
+            <div class="apix-controls">
+              <input class="apix-input" type="text" placeholder="${cfg.placeholder || ""}" />
+              <button class="apix-send" type="button">${cfg.sendLabel || "Send"}</button>
+            </div>
+          </div>
+        `;
+
+        bindAyaApiScene(slideRich, cfg);
+      }
+
+      if (presenterKey === "aya" && slide.mode === "aya-controllers") {
+        const cfg = slide.controllers || {};
+        const leftPoints = cfg.leftPoints || [];
+        const rightPoints = cfg.rightPoints || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="ayct-shell">
+            <div class="ayct-head">
+              <h2>${cfg.heading || "05  Les Controleurs SDN"}</h2>
+            </div>
+
+            <div class="ayct-body">
+              <article class="ayct-card">
+                <div class="ayct-card-head">
+                  <h3>${cfg.leftTitle || "OpenDaylight (ODL)"}</h3>
+                  <p>${cfg.leftSub || "Linux Foundation"}</p>
+                </div>
+                <ul class="ayct-list">
+                  ${leftPoints.map((item) => `<li>${item}</li>`).join("")}
+                </ul>
+              </article>
+
+              <article class="ayct-card right">
+                <div class="ayct-card-head">
+                  <h3>${cfg.rightTitle || "OpenContrail"}</h3>
+                  <p>${cfg.rightSub || "Juniper / Linux Foundation"}</p>
+                </div>
+                <ul class="ayct-list">
+                  ${rightPoints.map((item) => `<li>${item}</li>`).join("")}
+                </ul>
+              </article>
+            </div>
+
+            <p class="ayct-note">${cfg.note || ""}</p>
+            <div class="ayct-footer">
+              <span>${cfg.footerLeft || ""}</span>
+              <span>${cfg.footerRight || ""}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "aya" && slide.mode === "aya-actors") {
+        const cfg = slide.actors || {};
+        const blocks = cfg.blocks || [];
+        const extras = cfg.extras || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="ayaog-shell">
+            <div class="ayaog-head">
+              <h2>${cfg.heading || "06  Acteurs et Organismes SDN"}</h2>
+            </div>
+            <div class="ayaog-body">
+              ${blocks.map((block) => `
+                <article class="ayaog-card">
+                  <h3>${block.title || ""}</h3>
+                  <p class="ayaog-sub">${block.subtitle || ""}</p>
+                  <p class="ayaog-text">${block.text || ""}</p>
+                </article>
+              `).join("")}
+              <div class="ayaog-tags">
+                <span>${cfg.extrasLabel || "Autres acteurs industriels :"}</span>
+                <div class="ayaog-chip-row">
+                  ${extras.map((extra) => `<span class="ayaog-chip">${extra}</span>`).join("")}
+                </div>
+              </div>
+            </div>
+            <div class="ayaog-footer">
+              <span>${cfg.footerLeft || ""}</span>
+              <span>${cfg.footerRight || ""}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (presenterKey === "mamoune" && slide.mode === "history") {
+        const points = slide.historyPoints || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="historyx-block">
+            <div class="historyx-header">
+              <div class="historyx-label">1-Introduction - Histoire</div>
+              <div class="historyx-title">Naissance et evolution du <span>SDN</span> - 2007 a 2026</div>
+            </div>
+            <div class="historyx-track">
+              ${points.map((p, i) => `
+                <div class="historyx-milestone ${i === 0 ? "active" : ""}" data-idx="${i}">
+                  <div class="historyx-year">${p.year}</div>
+                  <div class="historyx-dot"></div>
+                </div>
+              `).join("")}
+            </div>
+            <div class="historyx-card-area">
+              <div class="historyx-card historyx-card-2007 visible" data-idx="0">
+                <div class="historyx-col-text">
+                  <div class="historyx-tag">${points[0]?.tag || "Origine"}</div>
+                  <div class="historyx-card-title">${points[0]?.title || ""}</div>
+                  <div class="historyx-card-desc">${points[0]?.desc || ""}</div>
+                </div>
+                <div class="historyx-col-photo">
+                  <div class="historyx-photo-frame"><img src="${points[0]?.photo || ""}" alt="Martin Casado"/></div>
+                  <div class="historyx-photo-badge">
+                    Martin Casado
+                    <span>Pere fondateur du SDN - Stanford 2007</span>
+                  </div>
+                </div>
+                <div class="historyx-col-divider"></div>
+                <div class="historyx-facts">
+                  ${(points[0]?.facts || []).map((f) => `
+                    <div class="historyx-fact">
+                      <div class="historyx-fact-icon">${f.icon}</div>
+                      <div class="historyx-fact-text">
+                        <strong>${f.title}</strong>
+                        <span>${f.sub}</span>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+              ${points.map((p, i) => {
+                if (i === 0) return "";
+                return `
+                  <div class="historyx-card" data-idx="${i}">
+                    <div class="historyx-card-main">
+                      <div class="historyx-tag">${p.tag}</div>
+                      <div class="historyx-card-title">${p.title}</div>
+                      <div class="historyx-card-desc">${p.desc}</div>
+                    </div>
+                    <div class="historyx-card-facts-std">
+                      ${(p.facts || []).map((f) => `
+                        <div class="historyx-fact">
+                          <div class="historyx-fact-icon">${f.icon}</div>
+                          <div class="historyx-fact-text">
+                            <strong>${f.title}</strong>
+                            <span>${f.sub}</span>
+                          </div>
+                        </div>
+                      `).join("")}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+              <div class="historyx-progress"><div class="historyx-progress-fill" style="width:${points.length ? (100 / points.length) : 0}%"></div></div>
+            </div>
+          </div>
+        `;
+
+        const nodes = slideRich.querySelectorAll(".historyx-milestone");
+        const cards = slideRich.querySelectorAll(".historyx-card");
+        const progress = slideRich.querySelector(".historyx-progress-fill");
+
+        const activateHistory = (idx) => {
+          nodes.forEach((n, i) => n.classList.toggle("active", i === idx));
+          cards.forEach((c, i) => c.classList.toggle("visible", i === idx));
+          if (progress) {
+            progress.style.width = `${((idx + 1) / Math.max(nodes.length, 1)) * 100}%`;
+          }
+        };
+
+        nodes.forEach((node, idx) => {
+          node.addEventListener("click", () => activateHistory(idx));
+        });
+      }
+
+      if (presenterKey === "mamoune" && slide.mode === "arch-overview") {
+        const cfg = slide.architecture || {};
+        const layers = cfg.layers || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="archx-shell">
+            <div class="archx-header">
+              <h2>${cfg.heading || "02  Architectures de reseaux SDN"}</h2>
+              <span class="archx-context">${cfg.context || ""}</span>
+            </div>
+            <div class="archx-grid">
+              <section class="archx-switch-card">
+                <div class="archx-switch-wrap">
+                  <svg viewBox="0 0 740 260" role="img" aria-label="Schema switch SDN">
+                    <defs>
+                      <linearGradient id="swg" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#0a5d85"/>
+                        <stop offset="100%" stop-color="#18b2d4"/>
+                      </linearGradient>
+                    </defs>
+                    <g fill="none" stroke="#3d6f94" stroke-width="2">
+                      <rect x="100" y="70" width="540" height="120" rx="20" fill="#f7fbff"/>
+                      <rect x="130" y="95" width="380" height="70" rx="12" fill="#ffffff"/>
+                      <rect x="525" y="95" width="85" height="70" rx="10" fill="#eef6fd"/>
+                    </g>
+                    <g fill="#1f5f88">
+                      <text x="150" y="137" font-family="DM Sans, Segoe UI, sans-serif" font-size="30" font-weight="700">SDN SWITCH</text>
+                    </g>
+                    <g fill="url(#swg)">
+                      <circle cx="560" cy="130" r="16"/>
+                      <circle cx="590" cy="130" r="16" opacity="0.72"/>
+                    </g>
+                    <g stroke="#6c8faa" stroke-width="2">
+                      <line x1="60" y1="95" x2="100" y2="95"/>
+                      <line x1="60" y1="120" x2="100" y2="120"/>
+                      <line x1="60" y1="145" x2="100" y2="145"/>
+                      <line x1="60" y1="170" x2="100" y2="170"/>
+                      <line x1="640" y1="95" x2="680" y2="95"/>
+                      <line x1="640" y1="120" x2="680" y2="120"/>
+                      <line x1="640" y1="145" x2="680" y2="145"/>
+                      <line x1="640" y1="170" x2="680" y2="170"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="archx-layer-list">
+                  ${layers.map((layer) => `
+                    <article class="archx-layer-item">
+                      <strong>${layer.name}</strong>
+                      <span>${layer.desc}</span>
+                    </article>
+                  `).join("")}
+                </div>
+                </section>
+                <section class="archx-side-card">
+                  <h3>${cfg.summaryTitle || "Architecture SDN"}</h3>
+                  <p>${cfg.summaryText || ""}</p>
+                  <div class="archx-layer-list">
+                    <article class="archx-layer-item">
+                      <strong>Northbound API</strong>
+                      <span>Applications -> Controleur (intentions et politiques)</span>
+                    </article>
+                    <article class="archx-layer-item">
+                      <strong>Southbound API</strong>
+                      <span>Controleur -> Infrastructure (regles OpenFlow / NETCONF)</span>
+                    </article>
+                    <article class="archx-layer-item">
+                      <strong>Boucle d etat</strong>
+                      <span>Telemetrie et statistiques remontees au controleur</span>
+                    </article>
+                  </div>
+                </section>
+              </div>
+            </div>
+          `;
+      }
+
+      if (presenterKey === "mamoune" && slide.mode === "arch-layer") {
+        const cfg = slide.archLayer || {};
+        const points = cfg.points || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="archx-shell">
+            <div class="archx-header">
+              <h2>${cfg.heading || "Couche SDN"}</h2>
+              <span class="archx-context">${cfg.context || "2-Architectures"}</span>
+            </div>
+            <div class="archx-grid">
+              <section class="archx-switch-card">
+                <h3 style="margin:0 0 12px;color:#0c628b;font-size:1.35rem;">${cfg.summaryTitle || ""}</h3>
+                <p style="margin:0 0 14px;color:#3a556c;line-height:1.5;white-space:pre-line;">${cfg.summaryText || ""}</p>
+                <div class="archx-layer-list">
+                  ${points.map((item) => `
+                    <article class="archx-layer-item">
+                      <strong>${item.name}</strong>
+                      <span>${item.desc}</span>
+                    </article>
+                  `).join("")}
+                </div>
+                </section>
+                <section class="archx-side-card">
+                  ${cfg.cliEnabled ? `
+                    <h3>${cfg.cliTitle || "CLI de simulation"}</h3>
+                    <p>${cfg.cliHint || ""}</p>
+                    <div class="archx-cli">
+                      <div class="archx-cli-head">
+                        <span>${cfg.heading || "Couche"}</span>
+                        <span class="archx-cli-dots"><i></i><i></i><i></i></span>
+                      </div>
+                      <div class="archx-cli-body"></div>
+                      <div class="archx-cli-input">
+                        <span class="archx-cli-prompt">${cfg.cliPrompt || "sdn@node:~$"}</span>
+                        <input class="archx-cli-field" type="text" placeholder="Ex: show flow table 10" />
+                        <button class="archx-cli-run" type="button">Run</button>
+                      </div>
+                    </div>
+                  ` : `
+                    <h3>Canvas d intentions applicatives</h3>
+                    <p>Interaction metier -> politique -> controleur. Choisissez une intention pour voir sa traduction.</p>
+                    <div class="archx-app-flow">
+                      <div class="archx-app-nodes">
+                        <div class="archx-app-node">Application</div>
+                        <div class="archx-app-arrows">→</div>
+                        <div class="archx-app-node">Intent API</div>
+                      </div>
+                      <div class="archx-app-nodes">
+                        <div class="archx-app-node">Policy Engine</div>
+                        <div class="archx-app-arrows">→</div>
+                        <div class="archx-app-node">Controleur SDN</div>
+                      </div>
+                      <div class="archx-app-actions">
+                        <button class="archx-app-btn" type="button" data-action="qos">QoS voix</button>
+                        <button class="archx-app-btn" type="button" data-action="segmentation">Segmentation</button>
+                        <button class="archx-app-btn" type="button" data-action="security">Securite zero-trust</button>
+                      </div>
+                      <pre class="archx-app-out"></pre>
+                    </div>
+                  `}
+                </section>
+              </div>
+            </div>
+          `;
+
+        if (cfg.cliEnabled) bindArchCli(slideRich, cfg);
+        if (!cfg.cliEnabled && cfg.visualMode === "app-canvas") bindArchAppCanvas(slideRich, cfg);
+      }
+
+      if (presenterKey === "mamoune" && slide.mode === "decoupling") {
+        const cfg = slide.decoupling || {};
+        const switches = cfg.switches || [];
+        const switchSrc = cfg.switchImage ? encodeURI(cfg.switchImage) : "";
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="decx-shell">
+            <div class="decx-header">
+              <h2>${cfg.heading || "03  Decouplage du data-plane vs control-plane"}</h2>
+              <span class="decx-context">${cfg.context || "Architecture SDN cible"}</span>
+            </div>
+            <div class="decx-stage">
+              <svg class="decx-links" viewBox="0 0 1200 560" aria-hidden="true">
+                <line x1="600" y1="138" x2="214" y2="410" stroke="#2f4150" stroke-width="3" stroke-dasharray="10 8"/>
+                <line x1="600" y1="138" x2="600" y2="428" stroke="#2f4150" stroke-width="3" stroke-dasharray="10 8"/>
+                <line x1="600" y1="138" x2="986" y2="410" stroke="#2f4150" stroke-width="3" stroke-dasharray="10 8"/>
+                <line x1="214" y1="430" x2="600" y2="446" stroke="#4f6679" stroke-width="2" stroke-dasharray="8 7"/>
+                <line x1="600" y1="446" x2="986" y2="430" stroke="#4f6679" stroke-width="2" stroke-dasharray="8 7"/>
+              </svg>
+              <section class="decx-server-zone">
+                <p class="decx-controller-label">${cfg.controllerLabel || "= SDN Controller"}</p>
+                <div class="decx-dropzone" aria-label="Zone de depot vers le controleur SDN">
+                  <p class="decx-drop-hint">${cfg.instruction || "Glissez les plans vers le controleur SDN."}</p>
+                  <div class="decx-central-stack" aria-live="polite"></div>
+                </div>
+                <p class="decx-objective">${cfg.statusText || "Objectif: centraliser management + controle, garder Data Plan sur les switches."}</p>
+                <div class="decx-status-row">
+                  <p class="decx-status">0/0 plans migres vers le controleur SDN</p>
+                  <p class="decx-done">✔ Validation</p>
+                </div>
+              </section>
+              <section class="decx-switch-grid">
+                ${switches.map((node, idx) => `
+                  <article class="decx-switch-node">
+                    <div class="decx-chips">
+                      <div class="decx-chip" data-plane="mgmt" draggable="true">${node.mgmt || "Mngt Plan"}</div>
+                      <div class="decx-chip" data-plane="control" draggable="true">${node.control || "Control Plan"}</div>
+                      <div class="decx-chip" data-plane="data">${node.data || "Data Plan"}</div>
+                    </div>
+                    <img class="decx-switch-img decx-safe-img" src="${switchSrc}" alt="" />
+                    <div class="decx-switch-label">${node.name || `Switch ${idx + 1}`}</div>
+                  </article>
+                `).join("")}
+              </section>
+            </div>
+          </div>
+        `;
+
+        bindDecouplingBoard(slideRich, cfg);
+      }
+
+      if ((presenterKey === "mamoune" && slide.mode === "recap") || (presenterKey === "aya" && slide.mode === "recap")) {
+        const cfg = slide.recap || {};
+        const points = cfg.points || [];
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="recapx-shell">
+            <div class="recapx-head">
+              <h2>${cfg.heading || "04  Recapitulatif"}</h2>
+              <p>${cfg.subtitle || "Points cles"}</p>
+            </div>
+            <div class="recapx-grid">
+              ${points.map((p, i) => `
+                <article class="recapx-item">
+                  <span class="recapx-index">0${i + 1}</span>
+                  <strong>${p.title || ""}</strong>
+                  <span>${p.text || ""}</span>
+                </article>
+              `).join("")}
+            </div>
+            <div class="recapx-takeaway">
+              <strong>Message final: </strong>${cfg.takeaway || ""}
+            </div>
+          </div>
+        `;
+      }
+
+      if ((presenterKey === "mamoune" && slide.mode === "handoff-aya") || (presenterKey === "aya" && slide.mode === "handoff-abdellah")) {
+        const cfg = slide.handoff || {};
+        const targetPresenter = cfg.targetPresenter || (slide.mode === "handoff-aya" ? "aya" : "abdellah");
+        const targetName = targetPresenter.charAt(0).toUpperCase() + targetPresenter.slice(1);
+        slideTag.hidden = true;
+        slideTitle.hidden = true;
+        slideText.hidden = true;
+        slideRich.hidden = false;
+
+        slideRich.innerHTML = `
+          <div class="handoffx-shell">
+            <p class="handoffx-tag">${cfg.tag || "Transition"}</p>
+            <h2 class="handoffx-title">${cfg.heading || "Passage de parole"}</h2>
+            <p class="handoffx-text">${cfg.message || `${targetName} va continuer la presentation.`}</p>
+            <button class="handoffx-btn" type="button" id="handoffNextBtn">${cfg.buttonLabel || `Passer a ${targetName}`}</button>
+          </div>
+        `;
+
+        const handoffBtn = slideRich.querySelector("#handoffNextBtn");
+        handoffBtn?.addEventListener("click", () => activatePresenter(targetPresenter));
+      }
+
+      prevSlideBtn.classList.toggle("is-visible", slideIndex > 0);
+      nextSlideBtn.classList.toggle("is-visible", slideIndex < slides.length - 1);
+
+      menuItems.querySelectorAll(".menu-link").forEach((btn) => {
+        const targetIndex = Number(btn.dataset.slideIndex);
+        btn.style.textDecoration = targetIndex === slideIndex ? "underline" : "none";
+      });
+    };
+
+    const renderMenu = (presenterKey) => {
+      const slides = presenterSlides[presenterKey];
+      const presenterName = presenterKey.charAt(0).toUpperCase() + presenterKey.slice(1);
+      menuTitle.textContent = `Menu de ${presenterName}`;
+      menuItems.innerHTML = "";
+
+      const entries = slides
+        .map((slide, index) => ({ slide, index }))
+        .filter((entry) => entry.slide.inMenu !== false);
+
+      if (presenterKey === "aya") {
+        const ayaMenuOrder = {
+          "Couches d'abstraction": 0,
+          "API en action (ChatGPT)": 1,
+          "API Nord": 2,
+          "API Sud": 3,
+          "Controleurs": 4,
+          "Acteurs SDN": 5
+        };
+
+        entries.sort((a, b) => {
+          const orderA = Object.prototype.hasOwnProperty.call(ayaMenuOrder, a.slide.label) ? ayaMenuOrder[a.slide.label] : 999;
+          const orderB = Object.prototype.hasOwnProperty.call(ayaMenuOrder, b.slide.label) ? ayaMenuOrder[b.slide.label] : 999;
+          return orderA - orderB;
+        });
+      }
+
+      entries.forEach(({ slide, index }) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `menu-link${slide.submenu ? " submenu" : ""}`;
+        btn.dataset.slideIndex = String(index);
+        btn.textContent = slide.label;
+        btn.addEventListener("click", () => renderSlide(presenterKey, index));
+        menuItems.appendChild(btn);
+      });
+    };
+
+    const activatePresenter = (presenterKey) => {
+      activePresenter = presenterKey;
+      topLinks.forEach((btn) => btn.classList.remove("is-active"));
+      const activeBtn = document.querySelector(`.top-link[data-target="${presenterKey}"]`);
+      if (activeBtn) activeBtn.classList.add("is-active");
+      renderMenu(presenterKey);
+      renderSlide(presenterKey, 0);
+    };
+
+    hotspot.addEventListener("mouseenter", showMenu);
+    sideMenu.addEventListener("mouseenter", showMenu);
+    hotspot.addEventListener("mouseleave", hideMenu);
+    sideMenu.addEventListener("mouseleave", hideMenu);
+
+    topLinks.forEach((button) => {
+      button.addEventListener("click", () => {
+        activatePresenter(button.dataset.target);
+      });
+    });
+
+    nextSlideBtn.addEventListener("click", () => {
+      if (!activePresenter) return;
+      const slides = presenterSlides[activePresenter];
+      if (activeSlideIndex < slides.length - 1) {
+        renderSlide(activePresenter, activeSlideIndex + 1);
+      }
+    });
+
+    prevSlideBtn.addEventListener("click", () => {
+      if (!activePresenter) return;
+      if (activeSlideIndex > 0) {
+        renderSlide(activePresenter, activeSlideIndex - 1);
+      }
+    });
+
+    activatePresenter("abdellah");
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        sideMenu.classList.remove("is-visible");
+      }
+    });
+  </script>
+</body>
+</html>
